@@ -16,6 +16,7 @@
 #include "core/mdec.h"
 #include "core/pgxp.h"
 #include "core/save_state_version.h"
+#include "core/sio.h"
 #include "core/spu.h"
 #include "core/system.h"
 #include "core/texture_replacements.h"
@@ -1254,6 +1255,8 @@ void CommonHostInterface::DrawDebugWindows()
     g_mdec.DrawDebugStateWindow();
   if (g_settings.debugging.show_dma_state)
     g_dma.DrawDebugStateWindow();
+  if (g_settings.debugging.show_sio_state)
+    g_sio.DrawDebugStateWindow();
 }
 
 bool CommonHostInterface::IsCheevosChallengeModeActive() const
@@ -2655,6 +2658,7 @@ void CommonHostInterface::FixIncompatibleSettings(bool display_osd_messages)
     g_settings.debugging.show_timers_state = false;
     g_settings.debugging.show_mdec_state = false;
     g_settings.debugging.show_dma_state = false;
+    g_settings.debugging.show_sio_state = false;
     g_settings.debugging.dump_cpu_to_vram_copies = false;
     g_settings.debugging.dump_vram_to_cpu_copies = false;
   }

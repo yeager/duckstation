@@ -148,6 +148,7 @@
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="shadergen.cpp" />
     <ClCompile Include="sio.cpp" />
+    <ClCompile Include="sio_connection.cpp" />
     <ClCompile Include="spu.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="texture_replacements.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="shadergen.h" />
     <ClInclude Include="shader_cache_version.h" />
     <ClInclude Include="sio.h" />
+    <ClInclude Include="sio_connection.h" />
     <ClInclude Include="spu.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="texture_replacements.h" />

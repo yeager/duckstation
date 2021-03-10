@@ -185,6 +185,7 @@ struct Settings
     mutable bool show_timers_state = false;
     mutable bool show_mdec_state = false;
     mutable bool show_dma_state = false;
+    mutable bool show_sio_state = false;
   } debugging;
 
   // texture replacements
