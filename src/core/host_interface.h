@@ -142,6 +142,9 @@ public:
   /// Returns true if any BIOS images are found in the configured BIOS directory.
   bool HasAnyBIOSImages();
 
+  /// Loads the configured expansion ROM image, if any.
+  std::optional<std::vector<u8>> GetExpansionROMImage();
+
   /// Opens a file in the DuckStation "package".
   /// This is the APK for Android builds, or the program directory for standalone builds.
   virtual std::unique_ptr<ByteStream> OpenPackageFile(const char* path, u32 flags) = 0;

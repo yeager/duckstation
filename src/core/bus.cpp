@@ -189,6 +189,8 @@ bool DoState(StateWrapper& sw)
 void SetExpansionROM(std::vector<u8> data)
 {
   m_exp1_rom = std::move(data);
+  if (m_exp1_rom.size() < 256 * 1024)
+    m_exp1_rom.resize(256 * 1024, 0xFF);
 }
 
 void SetBIOS(const std::vector<u8>& image)
@@ -813,24 +815,38 @@ ALWAYS_INLINE static TickCount DoBIOSAccess(u32 offset, u32& value)
   return m_bios_access_time[static_cast<u32>(size)];
 }
 
+static bool flash_unlocked = false;
+static bool chip_id_mode = false;
+static u8 chip_id[] = {0x1F, 0xA4};
+static u8 flash_command_key[] = {0xAA, 0x55};
+static u8 flash_command_sequence = 0;
+
 template<MemoryAccessType type, MemoryAccessSize size>
 static TickCount DoEXP1Access(u32 offset, u32& value)
 {
+  constexpr u32 transfer_size = u32(1) << static_cast<u32>(size);
+
   if constexpr (type == MemoryAccessType::Read)
   {
-    if (m_exp1_rom.empty())
+    if (chip_id_mode)
+    {
+      if ((offset + transfer_size) > sizeof(chip_id))
+        value = 0;
+      else
+        std::memcpy(&value, &chip_id[offset], sizeof(value));
+    }
+    else if (m_exp1_rom.empty())
     {
       // EXP1 not present.
       value = UINT32_C(0xFFFFFFFF);
     }
-    else if (offset == 0x20018)
+    else if (offset == 0x60000)
     {
       // Bit 0 - Action Replay On/Off
       value = UINT32_C(1);
     }
     else
     {
-      const u32 transfer_size = u32(1) << static_cast<u32>(size);
       if ((offset + transfer_size) > m_exp1_rom.size())
       {
         value = UINT32_C(0);
@@ -861,6 +877,69 @@ static TickCount DoEXP1Access(u32 offset, u32& value)
   else
   {
     Log_WarningPrintf("EXP1 write: 0x%08X <- 0x%08X", EXP1_BASE | offset, value);
+
+    if (offset == 0x5555 && value == 0xAA && flash_command_sequence == 0)
+    {
+      flash_command_sequence = 1;
+      return 0;
+    }
+    else if (offset == 0x2AAA && value == 0x55 && flash_command_sequence == 1)
+    {
+      flash_command_sequence = 2;
+      return 0;
+    }
+    else if (offset == 0x5555 && flash_command_sequence == 2)
+    {
+      flash_command_sequence = 0;
+
+      switch (value)
+      {
+        case 0xA0:
+        {
+          Log_DevPrintf("Flash unlocked");
+          flash_unlocked = true;
+        }
+        break;
+
+        case 0x90:
+        {
+          Log_DevPrintf("Enter ID mode");
+          chip_id_mode = true;
+        }
+        break;
+
+        case 0xF0:
+        {
+          Log_DevPrintf("Exit ID mode");
+          chip_id_mode = false;
+        }
+        break;
+
+        case 0x80:
+        {
+          Log_WarningPrintf("Erase chip 1");
+        }
+        break;
+
+        case 0x10:
+        {
+          Log_WarningPrintf("Erase chip 2");
+        }
+        break;
+
+        default:
+        {
+          Log_ErrorPrintf("Unknown flash command 0x%02X", value);
+        }
+        break;
+      }
+
+      return 0;
+    }
+
+    if ((offset + transfer_size) <= m_exp1_rom.size())
+      std::memcpy(&m_exp1_rom[offset], &value, sizeof(value));
+
     return 0;
   }
 }
@@ -1294,9 +1373,22 @@ ALWAYS_INLINE_RELEASE bool DoInstructionRead(PhysicalMemoryAddress address, void
   }
   else if (address >= BIOS_BASE && address < (BIOS_BASE + BIOS_SIZE))
   {
-    std::memcpy(data, &g_bios[(address - BIOS_BASE) & BIOS_MASK], sizeof(u32) * word_count);
+    std::memcpy(data, &g_bios[address - BIOS_BASE], sizeof(u32) * word_count);
     if constexpr (add_ticks)
       g_state.pending_ticks += m_bios_access_time[static_cast<u32>(MemoryAccessSize::Word)] * word_count;
+
+    return true;
+  }
+  else if (address >= EXP1_BASE && address < (EXP1_BASE + EXP1_SIZE))
+  {
+    const u32 offset = (address - EXP1_BASE);
+    if ((offset + (word_count * sizeof(u32))) <= m_exp1_rom.size())
+      std::memcpy(data, m_exp1_rom.data() + offset, sizeof(u32) * word_count);
+    else
+      std::memset(data, 0, sizeof(u32) * word_count);
+
+    if constexpr (add_ticks)
+      g_state.pending_ticks += m_exp1_access_time[static_cast<u32>(MemoryAccessSize::Word)] * word_count;
 
     return true;
   }

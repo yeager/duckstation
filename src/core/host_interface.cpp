@@ -399,6 +399,19 @@ bool HostInterface::HasAnyBIOSImages()
   return (FindBIOSImageInDirectory(ConsoleRegion::Auto, dir.c_str()).has_value());
 }
 
+std::optional<std::vector<u8>> HostInterface::GetExpansionROMImage()
+{
+  std::string filename = GetStringSettingValue("BIOS", "ExpansionROMPath", "");
+  if (filename.empty())
+    return {};
+
+  std::optional<std::vector<u8>> ret(FileSystem::ReadBinaryFile(filename.c_str()));
+  if (!ret)
+    return {};
+
+  return ret;
+}
+
 bool HostInterface::LoadState(const char* filename)
 {
   std::unique_ptr<ByteStream> stream = FileSystem::OpenFile(filename, BYTESTREAM_OPEN_READ | BYTESTREAM_OPEN_STREAMED);

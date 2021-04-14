@@ -64,7 +64,6 @@ static bool SaveMemoryState(MemorySaveState* mss);
 static bool LoadMemoryState(const MemorySaveState& mss);
 
 static bool LoadEXE(const char* filename);
-static bool SetExpansionROM(const char* filename);
 
 /// Opens CD image, preloading if needed.
 static std::unique_ptr<CDImage> OpenCDImage(const char* path, Common::Error* error, bool force_preload);
@@ -804,6 +803,15 @@ bool Boot(const SystemBootParameters& params)
     return false;
   }
 
+  // Load expansion ROM image.
+  std::optional<std::vector<u8>> expansion_rom = g_host_interface->GetExpansionROMImage();
+  if (!expansion_rom)
+  {
+    g_host_interface->ReportError(g_host_interface->TranslateString("System", "Failed to expansion ROM image."));
+    Shutdown();
+    return false;
+  }
+
   // Notify change of disc.
   UpdateRunningGame(media ? media->GetFileName().c_str() : params.filename.c_str(), media.get());
 
@@ -831,6 +839,9 @@ bool Boot(const SystemBootParameters& params)
   }
 
   Bus::SetBIOS(*bios_image);
+  if (expansion_rom && !expansion_rom->empty())
+    Bus::SetExpansionROM(std::move(*expansion_rom));
+
   UpdateControllers();
   UpdateMemoryCards();
   UpdateMultitaps();
@@ -1680,34 +1691,6 @@ bool InjectEXEFromBuffer(const void* buffer, u32 buffer_size, bool patch_bios)
       return false;
   }
 
-  return true;
-}
-
-bool SetExpansionROM(const char* filename)
-{
-  std::FILE* fp = FileSystem::OpenCFile(filename, "rb");
-  if (!fp)
-  {
-    Log_ErrorPrintf("Failed to open '%s'", filename);
-    return false;
-  }
-
-  std::fseek(fp, 0, SEEK_END);
-  const u32 size = static_cast<u32>(std::ftell(fp));
-  std::fseek(fp, 0, SEEK_SET);
-
-  std::vector<u8> data(size);
-  if (std::fread(data.data(), size, 1, fp) != 1)
-  {
-    Log_ErrorPrintf("Failed to read ROM data from '%s'", filename);
-    std::fclose(fp);
-    return false;
-  }
-
-  std::fclose(fp);
-
-  Log_InfoPrintf("Loaded expansion ROM from '%s': %u bytes", filename, size);
-  Bus::SetExpansionROM(std::move(data));
   return true;
 }
 
