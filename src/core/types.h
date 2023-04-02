@@ -196,6 +196,7 @@ enum class ControllerType : u8
   NeGcon,
   NeGconRumble,
   Justifier,
+  JogCon,
   Count
 };
 
