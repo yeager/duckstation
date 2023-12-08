@@ -159,7 +159,6 @@ std::string GetGameSettingsPath(std::string_view game_serial);
 std::string GetInputProfilePath(std::string_view name);
 
 State GetState();
-void SetState(State new_state);
 bool IsRunning();
 bool IsPaused();
 bool IsShutdown();
@@ -272,6 +271,8 @@ bool IsRunningAtNonStandardSpeed();
 float GetVideoFrameRate();
 void SetVideoFrameRate(float frequency);
 
+void GetFramePresentationDetails(bool* is_frame, bool* present_frame, bool* allow_present_skip, u64* present_time);
+
 // Access controllers for simulating input.
 Controller* GetController(u32 slot);
 void UpdateMemoryCardTypes();
@@ -375,7 +376,7 @@ s32 GetAudioOutputVolume();
 void UpdateVolume();
 
 /// Saves a screenshot to the specified file. If no file name is provided, one will be generated automatically.
-bool SaveScreenshot(const char* path = nullptr, DisplayScreenshotMode mode = g_settings.display_screenshot_mode,
+void SaveScreenshot(const char* path = nullptr, DisplayScreenshotMode mode = g_settings.display_screenshot_mode,
                     DisplayScreenshotFormat format = g_settings.display_screenshot_format,
                     u8 quality = g_settings.display_screenshot_quality, bool compress_on_thread = true);
 
@@ -403,10 +404,6 @@ void ToggleSoftwareRendering();
 /// Resizes the render window to the display size, with an optional scale.
 /// If the scale is set to 0, the internal resolution will be used, otherwise it is treated as a multiplier to 1x.
 void RequestDisplaySize(float scale = 0.0f);
-
-/// Renders the display.
-bool PresentDisplay(bool explicit_present, u64 present_time);
-void InvalidateDisplay();
 
 //////////////////////////////////////////////////////////////////////////
 // Memory Save States (Rewind and Runahead)

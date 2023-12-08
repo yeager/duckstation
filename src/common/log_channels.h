@@ -33,6 +33,7 @@
   X(GPUShaderCache)                                                                                                    \
   X(GPUTexture)                                                                                                        \
   X(GPUTextureCache)                                                                                                   \
+  X(GPUThread)                                                                                                         \
   X(GPU_HW)                                                                                                            \
   X(GPU_SW)                                                                                                            \
   X(GPU_SW_Rasterizer)                                                                                                 \

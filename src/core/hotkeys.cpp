@@ -8,6 +8,7 @@
 #include "fullscreen_ui.h"
 #include "gpu.h"
 #include "gpu_hw_texture_cache.h"
+#include "gpu_thread.h"
 #include "host.h"
 #include "imgui_overlays.h"
 #include "settings.h"
@@ -58,8 +59,7 @@ static void HotkeyModifyResolutionScale(s32 increment)
 
   if (System::IsValid())
   {
-    g_gpu->RestoreDeviceContext();
-    g_gpu->UpdateSettings(old_settings);
+    GPUThread::UpdateSettings(true);
     System::ClearMemorySaveStates();
   }
 }
@@ -386,11 +386,10 @@ DEFINE_HOTKEY("TogglePGXP", TRANSLATE_NOOP("Hotkeys", "Graphics"), TRANSLATE_NOO
               [](s32 pressed) {
                 if (!pressed && System::IsValid())
                 {
-                  Settings old_settings = g_settings;
                   g_settings.gpu_pgxp_enable = !g_settings.gpu_pgxp_enable;
-                  g_gpu->RestoreDeviceContext();
-                  g_gpu->UpdateSettings(old_settings);
                   System::ClearMemorySaveStates();
+                  GPUThread::UpdateSettings(true);
+
                   Host::AddKeyedOSDMessage("TogglePGXP",
                                            g_settings.gpu_pgxp_enable ?
                                              TRANSLATE_STR("OSDMessage", "PGXP is now enabled.") :
@@ -459,12 +458,11 @@ DEFINE_HOTKEY("TogglePGXPDepth", TRANSLATE_NOOP("Hotkeys", "Graphics"),
                   if (!g_settings.gpu_pgxp_enable)
                     return;
 
-                  const Settings old_settings = g_settings;
                   g_settings.gpu_pgxp_depth_buffer = !g_settings.gpu_pgxp_depth_buffer;
 
-                  g_gpu->RestoreDeviceContext();
-                  g_gpu->UpdateSettings(old_settings);
                   System::ClearMemorySaveStates();
+                  GPUThread::UpdateSettings(true);
+
                   Host::AddKeyedOSDMessage("TogglePGXPDepth",
                                            g_settings.gpu_pgxp_depth_buffer ?
                                              TRANSLATE_STR("OSDMessage", "PGXP Depth Buffer is now enabled.") :
@@ -480,12 +478,11 @@ DEFINE_HOTKEY("TogglePGXPCPU", TRANSLATE_NOOP("Hotkeys", "Graphics"), TRANSLATE_
                   if (!g_settings.gpu_pgxp_enable)
                     return;
 
-                  const Settings old_settings = g_settings;
                   g_settings.gpu_pgxp_cpu = !g_settings.gpu_pgxp_cpu;
 
-                  g_gpu->RestoreDeviceContext();
-                  g_gpu->UpdateSettings(old_settings);
+                  // GPU thread is unchanged
                   System::ClearMemorySaveStates();
+
                   Host::AddKeyedOSDMessage("TogglePGXPCPU",
                                            g_settings.gpu_pgxp_cpu ?
                                              TRANSLATE_STR("OSDMessage", "PGXP CPU mode is now enabled.") :
@@ -595,29 +592,29 @@ DEFINE_HOTKEY("AudioVolumeDown", TRANSLATE_NOOP("Hotkeys", "Audio"), TRANSLATE_N
 DEFINE_HOTKEY("LoadSelectedSaveState", TRANSLATE_NOOP("Hotkeys", "Save States"),
               TRANSLATE_NOOP("Hotkeys", "Load From Selected Slot"), [](s32 pressed) {
                 if (!pressed)
-                  Host::RunOnCPUThread(SaveStateSelectorUI::LoadCurrentSlot);
+                  GPUThread::RunOnThread(SaveStateSelectorUI::LoadCurrentSlot);
               })
 DEFINE_HOTKEY("SaveSelectedSaveState", TRANSLATE_NOOP("Hotkeys", "Save States"),
               TRANSLATE_NOOP("Hotkeys", "Save To Selected Slot"), [](s32 pressed) {
                 if (!pressed)
-                  Host::RunOnCPUThread(SaveStateSelectorUI::SaveCurrentSlot);
+                  GPUThread::RunOnThread(SaveStateSelectorUI::SaveCurrentSlot);
               })
 DEFINE_HOTKEY("SelectPreviousSaveStateSlot", TRANSLATE_NOOP("Hotkeys", "Save States"),
               TRANSLATE_NOOP("Hotkeys", "Select Previous Save Slot"), [](s32 pressed) {
                 if (!pressed)
-                  Host::RunOnCPUThread([]() { SaveStateSelectorUI::SelectPreviousSlot(true); });
+                  GPUThread::RunOnThread([]() { SaveStateSelectorUI::SelectPreviousSlot(true); });
               })
 DEFINE_HOTKEY("SelectNextSaveStateSlot", TRANSLATE_NOOP("Hotkeys", "Save States"),
               TRANSLATE_NOOP("Hotkeys", "Select Next Save Slot"), [](s32 pressed) {
                 if (!pressed)
-                  Host::RunOnCPUThread([]() { SaveStateSelectorUI::SelectNextSlot(true); });
+                  GPUThread::RunOnThread([]() { SaveStateSelectorUI::SelectNextSlot(true); });
               })
 DEFINE_HOTKEY("SaveStateAndSelectNextSlot", TRANSLATE_NOOP("Hotkeys", "Save States"),
               TRANSLATE_NOOP("Hotkeys", "Save State and Select Next Slot"), [](s32 pressed) {
                 if (!pressed && System::IsValid())
                 {
                   SaveStateSelectorUI::SaveCurrentSlot();
-                  SaveStateSelectorUI::SelectNextSlot(false);
+                  GPUThread::RunOnThread([]() { SaveStateSelectorUI::SelectNextSlot(false); });
                 }
               })
 

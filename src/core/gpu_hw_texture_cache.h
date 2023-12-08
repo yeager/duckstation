@@ -10,6 +10,7 @@ class RGBA8Image;
 class StateWrapper;
 
 struct Settings;
+class GPU_HW;
 
 //////////////////////////////////////////////////////////////////////////
 // Texture Cache
@@ -102,9 +103,13 @@ struct Source
   TListNode<Source> hash_cache_ref;
 };
 
-bool Initialize();
+bool Initialize(GPU_HW* backend);
 void UpdateSettings(bool use_texture_cache, const Settings& old_settings);
-bool DoState(StateWrapper& sw, bool skip);
+
+bool GetStateSize(StateWrapper& sw, u32* size);
+void LoadState(std::span<const u8> data, u32 data_version);
+void SaveState(StateWrapper& sw);
+
 void Shutdown();
 
 void Invalidate();

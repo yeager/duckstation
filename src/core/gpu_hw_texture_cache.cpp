@@ -49,6 +49,9 @@ static constexpr const GSVector4i& INVALID_RECT = GPU_HW::INVALID_RECT;
 static constexpr const GPUTexture::Format REPLACEMENT_TEXTURE_FORMAT = GPUTexture::Format::RGBA8;
 static constexpr const char LOCAL_CONFIG_FILENAME[] = "config.yaml";
 
+static constexpr u32 STATE_PALETTE_RECORD_SIZE =
+  sizeof(GSVector4i) + sizeof(SourceKey) + sizeof(PaletteRecordFlags) + sizeof(HashType) + sizeof(u16) * MAX_CLUT_SIZE;
+
 // Has to be public because it's referenced in Source.
 struct HashCacheEntry
 {
@@ -517,6 +520,7 @@ static std::unique_ptr<GPUTexture> s_replacement_texture_render_target;
 static std::unique_ptr<GPUPipeline> s_replacement_draw_pipeline;                 // copies alpha as-is
 static std::unique_ptr<GPUPipeline> s_replacement_semitransparent_draw_pipeline; // inverts alpha (i.e. semitransparent)
 
+static GPU_HW* s_hw_backend = nullptr; // TODO:FIXME: remove me
 static bool s_track_vram_writes = false;
 
 static std::string s_game_id;
@@ -551,8 +555,10 @@ bool GPUTextureCache::IsDumpingVRAMWriteTextures()
   return (g_settings.texture_replacements.dump_textures && !s_config.dump_texture_pages);
 }
 
-bool GPUTextureCache::Initialize()
+bool GPUTextureCache::Initialize(GPU_HW* backend)
 {
+  s_hw_backend = backend;
+
   LoadLocalConfiguration(false, false);
   UpdateVRAMTrackingState();
   if (!CompilePipelines())
@@ -599,134 +605,164 @@ void GPUTextureCache::UpdateSettings(bool use_texture_cache, const Settings& old
   }
 }
 
-bool GPUTextureCache::DoState(StateWrapper& sw, bool skip)
+bool GPUTextureCache::GetStateSize(StateWrapper& sw, u32* size)
 {
   if (sw.GetVersion() < 73)
   {
-    if (!skip)
-      WARNING_LOG("Texture cache not in save state due to old version.");
-
-    Invalidate();
+    *size = 0;
     return true;
   }
 
-  if (!sw.DoMarker("GPUTextureCache"))
+  const size_t start = sw.GetPosition();
+  if (!sw.DoMarker("GPUTextureCache")) [[unlikely]]
     return false;
 
-  if (sw.IsReading())
+  u32 num_vram_writes = 0;
+  sw.Do(&num_vram_writes);
+
+  for (u32 i = 0; i < num_vram_writes; i++)
   {
-    if (!skip)
-      Invalidate();
+    sw.SkipBytes(sizeof(GSVector4i) * 2 + sizeof(HashType));
 
-    u32 num_vram_writes = 0;
-    sw.Do(&num_vram_writes);
-
-    const bool skip_writes = (skip || !s_track_vram_writes);
-
-    for (u32 i = 0; i < num_vram_writes; i++)
-    {
-      static constexpr u32 PALETTE_RECORD_SIZE = sizeof(GSVector4i) + sizeof(SourceKey) + sizeof(PaletteRecordFlags) +
-                                                 sizeof(HashType) + sizeof(u16) * MAX_CLUT_SIZE;
-
-      if (skip_writes)
-      {
-        sw.SkipBytes(sizeof(GSVector4i) * 2 + sizeof(HashType));
-
-        u32 num_palette_records = 0;
-        sw.Do(&num_palette_records);
-        sw.SkipBytes(num_palette_records * PALETTE_RECORD_SIZE);
-      }
-      else
-      {
-        VRAMWrite* vrw = new VRAMWrite();
-        DoStateVector(sw, &vrw->active_rect);
-        DoStateVector(sw, &vrw->write_rect);
-        sw.Do(&vrw->hash);
-
-        u32 num_palette_records = 0;
-        sw.Do(&num_palette_records);
-
-        // Skip palette records if we're not dumping now.
-        if (g_settings.texture_replacements.dump_textures)
-        {
-          vrw->palette_records.reserve(num_palette_records);
-          for (u32 j = 0; j < num_palette_records; j++)
-          {
-            VRAMWrite::PaletteRecord& rec = vrw->palette_records.emplace_back();
-            DoStateVector(sw, &rec.rect);
-            sw.DoBytes(&rec.key, sizeof(rec.key));
-            sw.Do(&rec.flags);
-            sw.Do(&rec.palette_hash);
-            sw.DoBytes(rec.palette, sizeof(rec.palette));
-          }
-        }
-        else
-        {
-          sw.SkipBytes(num_palette_records * PALETTE_RECORD_SIZE);
-        }
-
-        if (sw.HasError())
-        {
-          delete vrw;
-          Invalidate();
-          return false;
-        }
-
-        vrw->num_page_refs = 0;
-        LoopRectPages(vrw->active_rect, [vrw](u32 pn) {
-          DebugAssert(vrw->num_page_refs < MAX_PAGE_REFS_PER_WRITE);
-          ListAppend(&s_pages[pn].writes, vrw, &vrw->page_refs[vrw->num_page_refs++]);
-          return true;
-        });
-      }
-    }
+    u32 num_palette_records = 0;
+    sw.Do(&num_palette_records);
+    sw.SkipBytes(num_palette_records * STATE_PALETTE_RECORD_SIZE);
   }
-  else
+
+  if (sw.HasError()) [[unlikely]]
+    return false;
+
+  *size = static_cast<u32>(sw.GetPosition() - start);
+  return true;
+}
+
+void GPUTextureCache::LoadState(std::span<const u8> data, u32 data_version)
+{
+  Invalidate();
+
+  if (data.empty())
   {
-    s_temp_vram_write_list.clear();
+    WARNING_LOG("Texture cache not in save state due to old version.");
+    return;
+  }
 
-    if (!skip && s_track_vram_writes)
+  // Don't need anything if we're not tracking VRAM writes.
+  if (!s_track_vram_writes)
+    return;
+
+  StateWrapper sw(data, StateWrapper::Mode::Read, data_version);
+
+  if (!sw.DoMarker("GPUTextureCache")) [[unlikely]]
+  {
+    WARNING_LOG("Invalid save state data.");
+    return;
+  }
+
+  u32 num_vram_writes = 0;
+  sw.Do(&num_vram_writes);
+
+  for (u32 i = 0; i < num_vram_writes; i++)
+  {
+    if (!s_track_vram_writes)
     {
-      for (PageEntry& page : s_pages)
-      {
-        ListIterate(page.writes, [](VRAMWrite* vrw) {
-          if (std::find(s_temp_vram_write_list.begin(), s_temp_vram_write_list.end(), vrw) !=
-              s_temp_vram_write_list.end())
-          {
-            return;
-          }
+      sw.SkipBytes(sizeof(GSVector4i) * 2 + sizeof(HashType));
 
-          // try not to lose data... pull it from the sources
-          if (g_settings.texture_replacements.dump_textures)
-            SyncVRAMWritePaletteRecords(vrw);
-
-          s_temp_vram_write_list.push_back(vrw);
-        });
-      }
+      u32 num_palette_records = 0;
+      sw.Do(&num_palette_records);
+      sw.SkipBytes(num_palette_records * STATE_PALETTE_RECORD_SIZE);
     }
-
-    u32 num_vram_writes = static_cast<u32>(s_temp_vram_write_list.size());
-    sw.Do(&num_vram_writes);
-    for (VRAMWrite* vrw : s_temp_vram_write_list)
+    else
     {
+      VRAMWrite* vrw = new VRAMWrite();
       DoStateVector(sw, &vrw->active_rect);
       DoStateVector(sw, &vrw->write_rect);
       sw.Do(&vrw->hash);
 
-      u32 num_palette_records = static_cast<u32>(vrw->palette_records.size());
+      u32 num_palette_records = 0;
       sw.Do(&num_palette_records);
-      for (VRAMWrite::PaletteRecord& rec : vrw->palette_records)
+
+      // Skip palette records if we're not dumping now.
+      if (g_settings.texture_replacements.dump_textures)
       {
-        DoStateVector(sw, &rec.rect);
-        sw.DoBytes(&rec.key, sizeof(rec.key));
-        sw.Do(&rec.flags);
-        sw.Do(&rec.palette_hash);
-        sw.DoBytes(rec.palette, sizeof(rec.palette));
+        vrw->palette_records.reserve(num_palette_records);
+        for (u32 j = 0; j < num_palette_records; j++)
+        {
+          VRAMWrite::PaletteRecord& rec = vrw->palette_records.emplace_back();
+          DoStateVector(sw, &rec.rect);
+          sw.DoBytes(&rec.key, sizeof(rec.key));
+          sw.Do(&rec.flags);
+          sw.Do(&rec.palette_hash);
+          sw.DoBytes(rec.palette, sizeof(rec.palette));
+        }
       }
+      else
+      {
+        sw.SkipBytes(num_palette_records * STATE_PALETTE_RECORD_SIZE);
+      }
+
+      if (sw.HasError())
+      {
+        WARNING_LOG("Invalid save state data.");
+        delete vrw;
+        Invalidate();
+        return;
+      }
+
+      vrw->num_page_refs = 0;
+      LoopRectPages(vrw->active_rect, [vrw](u32 pn) {
+        DebugAssert(vrw->num_page_refs < MAX_PAGE_REFS_PER_WRITE);
+        ListAppend(&s_pages[pn].writes, vrw, &vrw->page_refs[vrw->num_page_refs++]);
+        return true;
+      });
+    }
+  }
+}
+
+void GPUTextureCache::SaveState(StateWrapper& sw)
+{
+  sw.DoMarker("GPUTextureCache");
+
+  s_temp_vram_write_list.clear();
+
+  if (s_track_vram_writes)
+  {
+    for (PageEntry& page : s_pages)
+    {
+      ListIterate(page.writes, [](VRAMWrite* vrw) {
+        if (std::find(s_temp_vram_write_list.begin(), s_temp_vram_write_list.end(), vrw) !=
+            s_temp_vram_write_list.end())
+        {
+          return;
+        }
+
+        // try not to lose data... pull it from the sources
+        if (g_settings.texture_replacements.dump_textures)
+          SyncVRAMWritePaletteRecords(vrw);
+
+        s_temp_vram_write_list.push_back(vrw);
+      });
     }
   }
 
-  return !sw.HasError();
+  u32 num_vram_writes = static_cast<u32>(s_temp_vram_write_list.size());
+  sw.Do(&num_vram_writes);
+  for (VRAMWrite* vrw : s_temp_vram_write_list)
+  {
+    DoStateVector(sw, &vrw->active_rect);
+    DoStateVector(sw, &vrw->write_rect);
+    sw.Do(&vrw->hash);
+
+    u32 num_palette_records = static_cast<u32>(vrw->palette_records.size());
+    sw.Do(&num_palette_records);
+    for (VRAMWrite::PaletteRecord& rec : vrw->palette_records)
+    {
+      DoStateVector(sw, &rec.rect);
+      sw.DoBytes(&rec.key, sizeof(rec.key));
+      sw.Do(&rec.flags);
+      sw.Do(&rec.palette_hash);
+      sw.DoBytes(rec.palette, sizeof(rec.palette));
+    }
+  }
 }
 
 void GPUTextureCache::Shutdown()
@@ -737,6 +773,7 @@ void GPUTextureCache::Shutdown()
   s_replacement_texture_render_target.reset();
   s_hash_cache_purge_list = {};
   s_temp_vram_write_list = {};
+  s_hw_backend = nullptr;
   s_track_vram_writes = false;
 
   s_replacement_image_cache.clear();
@@ -3305,5 +3342,5 @@ void GPUTextureCache::ApplyTextureReplacements(SourceKey key, HashType tex_hash,
   g_gpu_device->RecycleTexture(std::move(entry->texture));
   entry->texture = std::move(replacement_tex);
 
-  g_gpu->RestoreDeviceContext();
+  s_hw_backend->RestoreDeviceContext();
 }

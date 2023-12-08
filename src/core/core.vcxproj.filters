@@ -45,7 +45,6 @@
     <ClCompile Include="analog_joystick.cpp" />
     <ClCompile Include="cpu_recompiler_code_generator_aarch32.cpp" />
     <ClCompile Include="gpu_backend.cpp" />
-    <ClCompile Include="gpu_sw_backend.cpp" />
     <ClCompile Include="multitap.cpp" />
     <ClCompile Include="host.cpp" />
     <ClCompile Include="game_database.cpp" />
@@ -71,6 +70,7 @@
     <ClCompile Include="gpu_dump.cpp" />
     <ClCompile Include="cdrom_subq_replacement.cpp" />
     <ClCompile Include="performance_counters.cpp" />
+    <ClCompile Include="gpu_thread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="types.h" />
@@ -119,7 +119,6 @@
     <ClInclude Include="analog_joystick.h" />
     <ClInclude Include="gpu_types.h" />
     <ClInclude Include="gpu_backend.h" />
-    <ClInclude Include="gpu_sw_backend.h" />
     <ClInclude Include="multitap.h" />
     <ClInclude Include="host.h" />
     <ClInclude Include="achievements.h" />
@@ -149,6 +148,7 @@
     <ClInclude Include="cdrom_subq_replacement.h" />
     <ClInclude Include="performance_counters.h" />
     <ClInclude Include="system_private.h" />
+    <ClInclude Include="gpu_thread.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="gpu_sw_rasterizer.inl" />

@@ -601,6 +601,9 @@ public:
   /// Returns a string representing the specified language.
   static const char* ShaderLanguageToString(GPUShaderLanguage language);
 
+  /// Returns a string representing the specified vsync mode.
+  static const char* VSyncModeToString(GPUVSyncMode mode);
+
   /// Returns a new device for the specified API.
   static std::unique_ptr<GPUDevice> CreateDeviceForAPI(RenderAPI api);
 

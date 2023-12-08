@@ -9,6 +9,7 @@
 #include "bus.h"
 #include "cpu_core.h"
 #include "fullscreen_ui.h"
+#include "gpu_thread.h"
 #include "host.h"
 #include "system.h"
 
@@ -1144,7 +1145,7 @@ void Achievements::ClientLoadGameCallback(int result, const char* error_message,
 
   // ensure fullscreen UI is ready for notifications
   if (display_summary)
-    FullscreenUI::Initialize();
+    GPUThread::RunOnThread(&FullscreenUI::Initialize);
 
   char url_buf[URL_BUFFER_SIZE];
   if (int err = rc_client_game_get_image_url(info, url_buf, std::size(url_buf)); err == RC_OK)
@@ -1199,7 +1200,7 @@ void Achievements::ClearGameHash()
 
 void Achievements::DisplayAchievementSummary()
 {
-  if (g_settings.achievements_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_notifications)
   {
     std::string title;
     if (IsHardcoreModeActive())
@@ -1224,8 +1225,13 @@ void Achievements::DisplayAchievementSummary()
       summary = TRANSLATE_STR("Achievements", "This game has no achievements.");
     }
 
-    ImGuiFullscreen::AddNotification("achievement_summary", ACHIEVEMENT_SUMMARY_NOTIFICATION_TIME, std::move(title),
-                                     std::move(summary), s_game_icon);
+    GPUThread::RunOnThread([title = std::move(title), summary = std::move(summary)]() mutable {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::AddNotification("achievement_summary", ACHIEVEMENT_SUMMARY_NOTIFICATION_TIME, std::move(title),
+                                       std::move(summary), s_game_icon);
+    });
   }
 
   // Technically not going through the resource API, but since we're passing this to something else, we can't.
@@ -1235,11 +1241,16 @@ void Achievements::DisplayAchievementSummary()
 
 void Achievements::DisplayHardcoreDeferredMessage()
 {
-  if (g_settings.achievements_hardcore_mode && !s_hardcore_mode && System::IsValid() && FullscreenUI::Initialize())
+  if (g_settings.achievements_hardcore_mode && !s_hardcore_mode && System::IsValid())
   {
-    ImGuiFullscreen::ShowToast(std::string(),
-                               TRANSLATE_STR("Achievements", "Hardcore mode will be enabled on system reset."),
-                               Host::OSD_WARNING_DURATION);
+    GPUThread::RunOnThread([]() {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::ShowToast(std::string(),
+                                 TRANSLATE_STR("Achievements", "Hardcore mode will be enabled on system reset."),
+                                 Host::OSD_WARNING_DURATION);
+    });
   }
 }
 
@@ -1261,7 +1272,7 @@ void Achievements::HandleUnlockEvent(const rc_client_event_t* event)
   INFO_LOG("Achievement {} ({}) for game {} unlocked", cheevo->title, cheevo->id, s_game_id);
   UpdateGameSummary();
 
-  if (g_settings.achievements_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_notifications)
   {
     std::string title;
     if (cheevo->category == RC_CLIENT_ACHIEVEMENT_CATEGORY_UNOFFICIAL)
@@ -1271,9 +1282,15 @@ void Achievements::HandleUnlockEvent(const rc_client_event_t* event)
 
     std::string badge_path = GetAchievementBadgePath(cheevo, cheevo->state);
 
-    ImGuiFullscreen::AddNotification(fmt::format("achievement_unlock_{}", cheevo->id),
-                                     static_cast<float>(g_settings.achievements_notification_duration),
-                                     std::move(title), cheevo->description, std::move(badge_path));
+    GPUThread::RunOnThread([id = cheevo->id, duration = g_settings.achievements_notification_duration,
+                            title = std::move(title), description = std::string(cheevo->description),
+                            badge_path = std::move(badge_path)]() mutable {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::AddNotification(fmt::format("achievement_unlock_{}", id), static_cast<float>(duration),
+                                       std::move(title), std::move(description), std::move(badge_path));
+    });
   }
 
   if (g_settings.achievements_sound_effects)
@@ -1285,7 +1302,7 @@ void Achievements::HandleGameCompleteEvent(const rc_client_event_t* event)
   INFO_LOG("Game {} complete", s_game_id);
   UpdateGameSummary();
 
-  if (g_settings.achievements_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_notifications)
   {
     std::string title = fmt::format(TRANSLATE_FS("Achievements", "Mastered {}"), s_game_title);
     std::string message = fmt::format(
@@ -1294,8 +1311,13 @@ void Achievements::HandleGameCompleteEvent(const rc_client_event_t* event)
                            s_game_summary.num_unlocked_achievements),
       TRANSLATE_PLURAL_STR("Achievements", "%n points", "Achievement points", s_game_summary.points_unlocked));
 
-    ImGuiFullscreen::AddNotification("achievement_mastery", GAME_COMPLETE_NOTIFICATION_TIME, std::move(title),
-                                     std::move(message), s_game_icon);
+    GPUThread::RunOnThread([title = std::move(title), message = std::move(message), icon = s_game_icon]() mutable {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::AddNotification("achievement_mastery", GAME_COMPLETE_NOTIFICATION_TIME, std::move(title),
+                                       std::move(message), std::move(icon));
+    });
   }
 }
 
@@ -1303,14 +1325,19 @@ void Achievements::HandleLeaderboardStartedEvent(const rc_client_event_t* event)
 {
   DEV_LOG("Leaderboard {} ({}) started", event->leaderboard->id, event->leaderboard->title);
 
-  if (g_settings.achievements_leaderboard_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_leaderboard_notifications)
   {
     std::string title = event->leaderboard->title;
     std::string message = TRANSLATE_STR("Achievements", "Leaderboard attempt started.");
 
-    ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", event->leaderboard->id),
-                                     LEADERBOARD_STARTED_NOTIFICATION_TIME, std::move(title), std::move(message),
-                                     s_game_icon);
+    GPUThread::RunOnThread([id = event->leaderboard->id, title = std::move(title), message = std::move(message),
+                            icon = s_game_icon]() mutable {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", id), LEADERBOARD_STARTED_NOTIFICATION_TIME,
+                                       std::move(title), std::move(message), std::move(icon));
+    });
   }
 }
 
@@ -1318,14 +1345,19 @@ void Achievements::HandleLeaderboardFailedEvent(const rc_client_event_t* event)
 {
   DEV_LOG("Leaderboard {} ({}) failed", event->leaderboard->id, event->leaderboard->title);
 
-  if (g_settings.achievements_leaderboard_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_leaderboard_notifications)
   {
     std::string title = event->leaderboard->title;
     std::string message = TRANSLATE_STR("Achievements", "Leaderboard attempt failed.");
 
-    ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", event->leaderboard->id),
-                                     LEADERBOARD_FAILED_NOTIFICATION_TIME, std::move(title), std::move(message),
-                                     s_game_icon);
+    GPUThread::RunOnThread([id = event->leaderboard->id, title = std::move(title), message = std::move(message),
+                            icon = s_game_icon]() mutable {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", id), LEADERBOARD_FAILED_NOTIFICATION_TIME,
+                                       std::move(title), std::move(message), std::move(icon));
+    });
   }
 }
 
@@ -1333,7 +1365,7 @@ void Achievements::HandleLeaderboardSubmittedEvent(const rc_client_event_t* even
 {
   DEV_LOG("Leaderboard {} ({}) submitted", event->leaderboard->id, event->leaderboard->title);
 
-  if (g_settings.achievements_leaderboard_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_leaderboard_notifications)
   {
     static const char* value_strings[NUM_RC_CLIENT_LEADERBOARD_FORMATS] = {
       TRANSLATE_NOOP("Achievements", "Your Time: {}{}"),
@@ -1349,9 +1381,14 @@ void Achievements::HandleLeaderboardSubmittedEvent(const rc_client_event_t* even
       event->leaderboard->tracker_value ? event->leaderboard->tracker_value : "Unknown",
       g_settings.achievements_spectator_mode ? std::string_view() : TRANSLATE_SV("Achievements", " (Submitting)"));
 
-    ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", event->leaderboard->id),
-                                     static_cast<float>(g_settings.achievements_leaderboard_duration), std::move(title),
-                                     std::move(message), s_game_icon);
+    GPUThread::RunOnThread([id = event->leaderboard->id, title = std::move(title), message = std::move(message),
+                            icon = s_game_icon]() mutable {
+      if (!FullscreenUI::Initialize())
+        return;
+      ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", id),
+                                       static_cast<float>(g_settings.achievements_leaderboard_duration),
+                                       std::move(title), std::move(message), std::move(icon));
+    });
   }
 
   if (g_settings.achievements_sound_effects)
@@ -1363,7 +1400,7 @@ void Achievements::HandleLeaderboardScoreboardEvent(const rc_client_event_t* eve
   DEV_LOG("Leaderboard {} scoreboard rank {} of {}", event->leaderboard_scoreboard->leaderboard_id,
           event->leaderboard_scoreboard->new_rank, event->leaderboard_scoreboard->num_entries);
 
-  if (g_settings.achievements_leaderboard_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_leaderboard_notifications)
   {
     static const char* value_strings[NUM_RC_CLIENT_LEADERBOARD_FORMATS] = {
       TRANSLATE_NOOP("Achievements", "Your Time: {} (Best: {})"),
@@ -1380,9 +1417,15 @@ void Achievements::HandleLeaderboardScoreboardEvent(const rc_client_event_t* eve
                   event->leaderboard_scoreboard->submitted_score, event->leaderboard_scoreboard->best_score),
       event->leaderboard_scoreboard->new_rank, event->leaderboard_scoreboard->num_entries);
 
-    ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", event->leaderboard->id),
-                                     static_cast<float>(g_settings.achievements_leaderboard_duration), std::move(title),
-                                     std::move(message), s_game_icon);
+    GPUThread::RunOnThread([id = event->leaderboard->id, title = std::move(title), message = std::move(message),
+                            icon = s_game_icon]() mutable {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::AddNotification(fmt::format("leaderboard_{}", id),
+                                       static_cast<float>(g_settings.achievements_leaderboard_duration),
+                                       std::move(title), std::move(message), std::move(icon));
+    });
   }
 }
 
@@ -1512,26 +1555,30 @@ void Achievements::HandleServerDisconnectedEvent(const rc_client_event_t* event)
 {
   WARNING_LOG("Server disconnected.");
 
-  if (FullscreenUI::Initialize())
-  {
+  GPUThread::RunOnThread([]() {
+    if (!FullscreenUI::Initialize())
+      return;
+
     ImGuiFullscreen::ShowToast(
       TRANSLATE_STR("Achievements", "Achievements Disconnected"),
       TRANSLATE_STR("Achievements",
                     "An unlock request could not be completed. We will keep retrying to submit this request."),
       Host::OSD_ERROR_DURATION);
-  }
+  });
 }
 
 void Achievements::HandleServerReconnectedEvent(const rc_client_event_t* event)
 {
   WARNING_LOG("Server reconnected.");
 
-  if (FullscreenUI::Initialize())
-  {
+  GPUThread::RunOnThread([]() {
+    if (!FullscreenUI::Initialize())
+      return;
+
     ImGuiFullscreen::ShowToast(TRANSLATE_STR("Achievements", "Achievements Reconnected"),
                                TRANSLATE_STR("Achievements", "All pending unlock requests have completed."),
                                Host::OSD_INFO_DURATION);
-  }
+  });
 }
 
 void Achievements::ResetClient()
@@ -1609,12 +1656,17 @@ void Achievements::SetHardcoreMode(bool enabled, bool force_display_message)
   // new mode
   s_hardcore_mode = enabled;
 
-  if (System::IsValid() && (HasActiveGame() || force_display_message) && FullscreenUI::Initialize())
+  if (System::IsValid() && (HasActiveGame() || force_display_message))
   {
-    ImGuiFullscreen::ShowToast(std::string(),
-                               enabled ? TRANSLATE_STR("Achievements", "Hardcore mode is now enabled.") :
-                                         TRANSLATE_STR("Achievements", "Hardcore mode is now disabled."),
-                               Host::OSD_INFO_DURATION);
+    GPUThread::RunOnThread([enabled]() {
+      if (!FullscreenUI::Initialize())
+        return;
+
+      ImGuiFullscreen::ShowToast(std::string(),
+                                 enabled ? TRANSLATE_STR("Achievements", "Hardcore mode is now enabled.") :
+                                           TRANSLATE_STR("Achievements", "Hardcore mode is now disabled."),
+                                 Host::OSD_INFO_DURATION);
+    });
   }
 
   rc_client_set_hardcore_enabled(s_client, enabled);
@@ -1925,7 +1977,7 @@ void Achievements::ShowLoginNotification()
   if (!user)
     return;
 
-  if (g_settings.achievements_notifications && FullscreenUI::Initialize())
+  if (g_settings.achievements_notifications)
   {
     std::string badge_path = GetLoggedInUserBadgePath();
     std::string title = user->display_name;
@@ -1934,8 +1986,14 @@ void Achievements::ShowLoginNotification()
     std::string summary = fmt::format(TRANSLATE_FS("Achievements", "Score: {} ({} softcore)\nUnread messages: {}"),
                                       user->score, user->score_softcore, user->num_unread_messages);
 
-    ImGuiFullscreen::AddNotification("achievements_login", LOGIN_NOTIFICATION_TIME, std::move(title),
-                                     std::move(summary), std::move(badge_path));
+    GPUThread::RunOnThread(
+      [title = std::move(title), summary = std::move(summary), badge_path = std::move(badge_path)]() mutable {
+        if (!FullscreenUI::Initialize())
+          return;
+
+        ImGuiFullscreen::AddNotification("achievements_login", LOGIN_NOTIFICATION_TIME, std::move(title),
+                                         std::move(summary), std::move(badge_path));
+      });
   }
 }
 
@@ -2035,14 +2093,6 @@ void Achievements::ConfirmHardcoreModeDisableAsync(const char* trigger, std::fun
   }
 #endif
 
-  if (!FullscreenUI::Initialize())
-  {
-    Host::AddOSDMessage(fmt::format(TRANSLATE_FS("Achievements", "Cannot {} while hardcode mode is active."), trigger),
-                        Host::OSD_WARNING_DURATION);
-    callback(false);
-    return;
-  }
-
   auto real_callback = [callback = std::move(callback)](bool res) mutable {
     // don't run the callback in the middle of rendering the UI
     Host::RunOnCPUThread([callback = std::move(callback), res]() {
@@ -2052,13 +2102,25 @@ void Achievements::ConfirmHardcoreModeDisableAsync(const char* trigger, std::fun
     });
   };
 
-  ImGuiFullscreen::OpenConfirmMessageDialog(
-    TRANSLATE_STR("Achievements", "Confirm Hardcore Mode"),
-    fmt::format(TRANSLATE_FS("Achievements", "{0} cannot be performed while hardcore mode is active. Do you "
-                                             "want to disable hardcore mode? {0} will be cancelled if you select No."),
-                trigger),
-    std::move(real_callback), fmt::format(ICON_FA_CHECK " {}", TRANSLATE_SV("Achievements", "Yes")),
-    fmt::format(ICON_FA_TIMES " {}", TRANSLATE_SV("Achievements", "No")));
+  GPUThread::RunOnThread([trigger = std::string(trigger), real_callback = std::move(real_callback)]() mutable {
+    if (!FullscreenUI::Initialize())
+    {
+      Host::AddOSDMessage(
+        fmt::format(TRANSLATE_FS("Achievements", "Cannot {} while hardcode mode is active."), trigger),
+        Host::OSD_WARNING_DURATION);
+      real_callback(false);
+      return;
+    }
+
+    ImGuiFullscreen::OpenConfirmMessageDialog(
+      TRANSLATE_STR("Achievements", "Confirm Hardcore Mode"),
+      fmt::format(TRANSLATE_FS("Achievements",
+                               "{0} cannot be performed while hardcore mode is active. Do you "
+                               "want to disable hardcore mode? {0} will be cancelled if you select No."),
+                  trigger),
+      std::move(real_callback), fmt::format(ICON_FA_CHECK " {}", TRANSLATE_SV("Achievements", "Yes")),
+      fmt::format(ICON_FA_TIMES " {}", TRANSLATE_SV("Achievements", "No")));
+  });
 #else
   Host::AddOSDMessage(fmt::format(TRANSLATE_FS("Achievements", "Cannot {} while hardcode mode is active."), trigger),
                       Host::OSD_WARNING_DURATION);

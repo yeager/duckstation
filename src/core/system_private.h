@@ -86,11 +86,8 @@ void OnSystemPaused();
 /// Called when the VM is resumed after being paused.
 void OnSystemResumed();
 
-/// Called when the pause state changes, or fullscreen UI opens.
-void OnIdleStateChanged();
-
 /// Called when performance metrics are updated, approximately once a second.
-void OnPerformanceCountersUpdated();
+void OnPerformanceCountersUpdated(const GPUBackend* gpu_backend);
 
 /// Provided by the host; called when the running executable changes.
 void OnGameChanged(const std::string& disc_path, const std::string& game_serial, const std::string& game_name);
