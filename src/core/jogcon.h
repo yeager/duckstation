@@ -8,6 +8,8 @@
 #include <optional>
 #include <string_view>
 
+class ForceFeedbackDevice;
+
 class JogCon final : public Controller
 {
 public:
@@ -189,4 +191,7 @@ private:
   JogconDirection jog_direction = JogconDirection::JOGCON_DIR_NONE;
   u8 jog_rotations = 0x0;
   JogconCommand jog_last_command = JogconCommand::JOGCON_CMD_NONE;
+
+  std::string m_force_feedback_device_name;
+  std::unique_ptr<ForceFeedbackDevice> m_force_feedback_device;
 };

@@ -869,7 +869,12 @@ static const Controller::ControllerBindingInfo s_binding_info[] = {
   AXIS("RRight", TRANSLATE_NOOP("JogCon", "Right Stick Right"), ICON_PF_RIGHT_ANALOG_RIGHT, JogCon::HalfAxis::RRight, GenericInputBinding::RightStickRight),
   AXIS("RDown", TRANSLATE_NOOP("JogCon", "Right Stick Down"), ICON_PF_RIGHT_ANALOG_DOWN, JogCon::HalfAxis::RDown, GenericInputBinding::RightStickDown),
   AXIS("RUp", TRANSLATE_NOOP("JogCon", "Right Stick Up"), ICON_PF_RIGHT_ANALOG_UP, JogCon::HalfAxis::RUp, GenericInputBinding::RightStickUp),
+
 // clang-format on
+
+  {"ForceFeedbackDevice", TRANSLATE_NOOP("JogCon", "Force Feedback Device"), nullptr,
+   static_cast<u32>(JogCon::Button::Count) + static_cast<u32>(JogCon::HalfAxis::Count), InputBindingInfo::Type::Device,
+   GenericInputBinding::Unknown},
 
 #undef AXIS
 #undef BUTTON
@@ -935,4 +940,17 @@ void JogCon::LoadSettings(SettingsInterface& si, const char* section)
   m_rumble_bias = static_cast<u8>(std::min<u32>(si.GetIntValue(section, "VibrationBias", 8), 255));
   m_invert_left_stick = static_cast<u8>(si.GetIntValue(section, "InvertLeftStick", 0));
   m_invert_right_stick = static_cast<u8>(si.GetIntValue(section, "InvertRightStick", 0));
+
+  std::string force_feedback_device_name = si.GetStringValue(section, "ForceFeedbackDevice");
+  if (m_force_feedback_device_name != force_feedback_device_name)
+  {
+    m_force_feedback_device_name = std::move(force_feedback_device_name);
+    m_force_feedback_device.reset();
+    if (!m_force_feedback_device_name.empty())
+    {
+      m_force_feedback_device = InputManager::CreateForceFeedbackDevice(m_force_feedback_device_name);
+      if (!m_force_feedback_device)
+        Log_ErrorFmt("Failed to create force feedback device {}", m_force_feedback_device_name);
+    }
+  }
 }
