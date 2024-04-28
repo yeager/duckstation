@@ -39,6 +39,8 @@ public:
   TinyString ConvertKeyToString(InputBindingKey key) override;
   TinyString ConvertKeyToIcon(InputBindingKey key) override;
 
+  std::unique_ptr<ForceFeedbackDevice> CreateForceFeedbackDevice(const std::string_view& device) override;
+
   bool ProcessSDLEvent(const SDL_Event* event);
 
   SDL_Joystick* GetJoystickForDevice(const std::string_view& device);
@@ -102,4 +104,42 @@ private:
   bool m_enable_iokit_driver = false;
   bool m_enable_mfi_driver = false;
 #endif
+};
+
+class SDLFFDevice : public ForceFeedbackDevice
+{
+public:
+  SDLFFDevice(SDL_Joystick* joystick, SDL_Haptic* haptic);
+  ~SDLFFDevice() override;
+
+  void SetConstantForce(int level) override;
+  void SetSpringForce(const EffectData& ff) override;
+  void SetDamperForce(const EffectData& ff) override;
+  void SetFrictionForce(const EffectData& ff) override;
+  void SetAutoCenter(int value) override;
+  void DisableForce(EffectID force) override;
+
+private:
+  void CreateEffects(SDL_Joystick* joystick);
+  void DestroyEffects();
+
+  SDL_Haptic* m_haptic = nullptr;
+
+  SDL_HapticEffect m_constant_effect;
+  int m_constant_effect_id = -1;
+  bool m_constant_effect_running = false;
+
+  SDL_HapticEffect m_spring_effect;
+  int m_spring_effect_id = -1;
+  bool m_spring_effect_running = false;
+
+  SDL_HapticEffect m_damper_effect;
+  int m_damper_effect_id = -1;
+  bool m_damper_effect_running = false;
+
+  SDL_HapticEffect m_friction_effect;
+  int m_friction_effect_id = -1;
+  bool m_friction_effect_running = false;
+
+  bool m_autocenter_supported = false;
 };

@@ -294,7 +294,7 @@ bool InputManager::ParseBindingAndGetSource(const std::string_view& binding, Inp
 
 std::string InputManager::ConvertInputBindingKeyToString(InputBindingInfo::Type binding_type, InputBindingKey key)
 {
-  if (binding_type == InputBindingInfo::Type::Pointer)
+  if (binding_type == InputBindingInfo::Type::Pointer || binding_type == InputBindingInfo::Type::Device)
   {
     // pointer and device bindings don't have a data part
     if (key.source_type == InputSourceType::Pointer)
@@ -347,7 +347,7 @@ std::string InputManager::ConvertInputBindingKeysToString(InputBindingInfo::Type
                                                           const InputBindingKey* keys, size_t num_keys)
 {
   // can't have a chord of devices/pointers
-  if (binding_type == InputBindingInfo::Type::Pointer)
+  if (binding_type == InputBindingInfo::Type::Pointer || binding_type == InputBindingInfo::Type::Device)
   {
     // so only take the first
     if (num_keys > 0)
@@ -866,6 +866,10 @@ void InputManager::AddPadBindings(SettingsInterface& si, const std::string& sect
         }
       }
       break;
+
+      case InputBindingInfo::Type::Device:
+        // handled in device
+        break;
 
       default:
         Log_ErrorPrintf("Unhandled binding info type %u", static_cast<u32>(bi.type));
@@ -1452,6 +1456,21 @@ void InputManager::OnInputDeviceDisconnected(const std::string_view& identifier)
   Host::OnInputDeviceDisconnected(identifier);
 }
 
+std::unique_ptr<ForceFeedbackDevice> InputManager::CreateForceFeedbackDevice(const std::string_view& device)
+{
+  for (u32 i = FIRST_EXTERNAL_INPUT_SOURCE; i < LAST_EXTERNAL_INPUT_SOURCE; i++)
+  {
+    if (s_input_sources[i])
+    {
+      std::unique_ptr<ForceFeedbackDevice> ffdev = s_input_sources[i]->CreateForceFeedbackDevice(device);
+      if (ffdev)
+        return ffdev;
+    }
+  }
+
+  return {};
+}
+
 // ------------------------------------------------------------------------
 // Vibration
 // ------------------------------------------------------------------------
@@ -1955,4 +1974,8 @@ void InputManager::ReloadSources(SettingsInterface& si, std::unique_lock<std::mu
 #else
   UpdateInputSourceState(si, settings_lock, InputSourceType::Android, &InputSource::CreateAndroidSource);
 #endif
+}
+
+ForceFeedbackDevice::~ForceFeedbackDevice()
+{
 }

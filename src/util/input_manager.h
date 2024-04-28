@@ -169,6 +169,39 @@ enum class InputPointerAxis : u8
 /// External input source class.
 class InputSource;
 
+/// Force feedback interface.
+class ForceFeedbackDevice
+{
+public:
+  struct EffectData
+  {
+    int center;
+    int deadband;
+    int left_coeff;
+    int right_coeff;
+    int left_saturation;
+    int right_saturation;
+  };
+
+  enum EffectID
+  {
+    EFF_CONSTANT = 0,
+    EFF_SPRING,
+    EFF_DAMPER,
+    EFF_FRICTION,
+  };
+
+  virtual ~ForceFeedbackDevice();
+
+  virtual void SetConstantForce(int level) = 0;
+  virtual void SetSpringForce(const EffectData& ff) = 0;
+  virtual void SetDamperForce(const EffectData& ff) = 0;
+  virtual void SetFrictionForce(const EffectData& ff) = 0;
+  virtual void SetAutoCenter(int value) = 0;
+
+  virtual void DisableForce(EffectID force) = 0;
+};
+
 namespace InputManager {
 /// Minimum interval between vibration updates when the effect is continuous.
 static constexpr double VIBRATION_UPDATE_INTERVAL_SECONDS = 0.5; // 500ms
@@ -352,6 +385,9 @@ void OnInputDeviceConnected(const std::string_view& identifier, const std::strin
 
 /// Called when an input device is disconnected.
 void OnInputDeviceDisconnected(const std::string_view& identifier);
+
+/// Creates a force feedback device interface for the specified source and device.
+std::unique_ptr<ForceFeedbackDevice> CreateForceFeedbackDevice(const std::string_view& device);
 } // namespace InputManager
 
 namespace Host {

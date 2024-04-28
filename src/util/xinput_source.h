@@ -53,6 +53,8 @@ public:
   TinyString ConvertKeyToString(InputBindingKey key) override;
   TinyString ConvertKeyToIcon(InputBindingKey key) override;
 
+  std::unique_ptr<ForceFeedbackDevice> CreateForceFeedbackDevice(const std::string_view& device) override;
+
 private:
   struct ControllerData
   {

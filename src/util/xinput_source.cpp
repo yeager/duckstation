@@ -364,6 +364,11 @@ TinyString XInputSource::ConvertKeyToIcon(InputBindingKey key)
   return ret;
 }
 
+std::unique_ptr<ForceFeedbackDevice> XInputSource::CreateForceFeedbackDevice(const std::string_view& device)
+{
+  return {};
+}
+
 std::vector<InputBindingKey> XInputSource::EnumerateMotors()
 {
   std::vector<InputBindingKey> ret;

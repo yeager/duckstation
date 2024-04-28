@@ -430,6 +430,11 @@ TinyString DInputSource::ConvertKeyToIcon(InputBindingKey key)
   return {};
 }
 
+std::unique_ptr<ForceFeedbackDevice> DInputSource::CreateForceFeedbackDevice(const std::string_view& device)
+{
+  return {};
+}
+
 void DInputSource::CheckForStateChanges(size_t index, const DIJOYSTATE& new_state)
 {
   ControllerData& cd = m_controllers[index];

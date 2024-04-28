@@ -16,6 +16,8 @@
 
 class SettingsInterface;
 
+class ForceFeedbackDevice;
+
 class InputSource
 {
 public:
@@ -50,6 +52,9 @@ public:
   /// Concurrently update both motors where possible, to avoid redundant packets.
   virtual void UpdateMotorState(InputBindingKey large_key, InputBindingKey small_key, float large_intensity,
                                 float small_intensity);
+
+  /// Creates a force-feedback device from this source.
+  virtual std::unique_ptr<ForceFeedbackDevice> CreateForceFeedbackDevice(const std::string_view& device) = 0;
 
   /// Creates a key for a generic controller axis event.
   static InputBindingKey MakeGenericControllerAxisKey(InputSourceType clazz, u32 controller_index, s32 axis_index);

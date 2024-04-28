@@ -99,6 +99,11 @@ TinyString Win32RawInputSource::ConvertKeyToIcon(InputBindingKey key)
   return {};
 }
 
+std::unique_ptr<ForceFeedbackDevice> Win32RawInputSource::CreateForceFeedbackDevice(const std::string_view& device)
+{
+  return {};
+}
+
 std::vector<InputBindingKey> Win32RawInputSource::EnumerateMotors()
 {
   return {};
