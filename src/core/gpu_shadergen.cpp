@@ -10,7 +10,7 @@ GPUShaderGen::GPUShaderGen(RenderAPI render_api, bool supports_dual_source_blend
 
 GPUShaderGen::~GPUShaderGen() = default;
 
-void GPUShaderGen::WriteDisplayUniformBuffer(std::stringstream& ss)
+void GPUShaderGen::WriteDisplayUniformBuffer(std::stringstream& ss) const
 {
   // Rotation matrix split into rows to avoid padding in HLSL.
   DeclareUniformBuffer(ss,
@@ -24,7 +24,7 @@ float2 ClampUV(float2 uv) {
 })";
 }
 
-std::string GPUShaderGen::GenerateDisplayVertexShader()
+std::string GPUShaderGen::GenerateDisplayVertexShader() const
 {
   std::stringstream ss;
   WriteHeader(ss);
@@ -48,7 +48,7 @@ std::string GPUShaderGen::GenerateDisplayVertexShader()
   return ss.str();
 }
 
-std::string GPUShaderGen::GenerateDisplayFragmentShader(bool clamp_uv)
+std::string GPUShaderGen::GenerateDisplayFragmentShader(bool clamp_uv) const
 {
   std::stringstream ss;
   WriteHeader(ss);
@@ -63,7 +63,7 @@ std::string GPUShaderGen::GenerateDisplayFragmentShader(bool clamp_uv)
   return ss.str();
 }
 
-std::string GPUShaderGen::GenerateDisplaySharpBilinearFragmentShader()
+std::string GPUShaderGen::GenerateDisplaySharpBilinearFragmentShader() const
 {
   std::stringstream ss;
   WriteHeader(ss);
@@ -92,7 +92,7 @@ std::string GPUShaderGen::GenerateDisplaySharpBilinearFragmentShader()
   return ss.str();
 }
 
-std::string GPUShaderGen::GenerateInterleavedFieldExtractFragmentShader()
+std::string GPUShaderGen::GenerateInterleavedFieldExtractFragmentShader() const
 {
   std::stringstream ss;
   WriteHeader(ss);
@@ -110,7 +110,7 @@ std::string GPUShaderGen::GenerateInterleavedFieldExtractFragmentShader()
   return ss.str();
 }
 
-std::string GPUShaderGen::GenerateDeinterlaceWeaveFragmentShader()
+std::string GPUShaderGen::GenerateDeinterlaceWeaveFragmentShader() const
 {
   std::stringstream ss;
   WriteHeader(ss);
@@ -131,7 +131,7 @@ std::string GPUShaderGen::GenerateDeinterlaceWeaveFragmentShader()
   return ss.str();
 }
 
-std::string GPUShaderGen::GenerateDeinterlaceBlendFragmentShader()
+std::string GPUShaderGen::GenerateDeinterlaceBlendFragmentShader() const
 {
   std::stringstream ss;
   WriteHeader(ss);
@@ -151,7 +151,7 @@ std::string GPUShaderGen::GenerateDeinterlaceBlendFragmentShader()
   return ss.str();
 }
 
-std::string GPUShaderGen::GenerateFastMADReconstructFragmentShader()
+std::string GPUShaderGen::GenerateFastMADReconstructFragmentShader() const
 {
   std::stringstream ss;
   WriteHeader(ss);
@@ -210,7 +210,7 @@ CONSTANT float3 SENSITIVITY = float3(0.08f, 0.08f, 0.08f);
   return ss.str();
 }
 
-std::string GPUShaderGen::GenerateChromaSmoothingFragmentShader()
+std::string GPUShaderGen::GenerateChromaSmoothingFragmentShader() const
 {
   std::stringstream ss;
   WriteHeader(ss);
