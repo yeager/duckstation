@@ -41,6 +41,7 @@
 #include "imgui_internal.h"
 #include "rc_api_runtime.h"
 #include "rc_client.h"
+#include "rc_util.h"
 
 #include <algorithm>
 #include <atomic>
@@ -123,6 +124,8 @@ struct AchievementProgressIndicator
 };
 } // namespace
 
+using LoginEncryptionKey = std::array<u8, RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH>;
+
 static void ReportError(std::string_view sv);
 template<typename... T>
 static void ReportFmtError(fmt::format_string<T...> fmt, T&&... args);
@@ -143,6 +146,10 @@ static void UpdateGameSummary();
 static std::string GetLocalImagePath(const std::string_view image_name, int type);
 static void DownloadImage(std::string url, std::string cache_filename);
 static void UpdateGlyphRanges();
+
+static LoginEncryptionKey GetLoginEncryptionKey(std::string_view username);
+static TinyString DecryptLoginToken(std::string_view encrypted_token, std::string_view username);
+static TinyString EncryptLoginToken(std::string_view token, std::string_view username);
 
 static bool CreateClient(rc_client_t** client, std::unique_ptr<HTTPDownloader>* http);
 static void DestroyClient(rc_client_t** client, std::unique_ptr<HTTPDownloader>* http);
@@ -466,6 +473,65 @@ void Achievements::UpdateGlyphRanges()
   ImGuiManager::SetEmojiFontRange(ImGuiManager::CompactFontRange(sorted_codepoints));
 }
 
+Achievements::LoginEncryptionKey Achievements::GetLoginEncryptionKey(std::string_view username)
+{
+  LoginEncryptionKey ret;
+
+  const int res = rc_client_get_login_encryption_key(ret.data(), username.data(), username.length());
+  if (res != RC_OK)
+  {
+    WARNING_LOG("rc_client_get_login_encryption_key() failed: {}, assuming zero.", res);
+    ret = {};
+  }
+
+  return ret;
+}
+
+TinyString Achievements::EncryptLoginToken(std::string_view token, std::string_view username)
+{
+  TinyString ret;
+  if (token.empty())
+    return ret;
+
+  const size_t len = rc_client_get_encrypted_login_length(token.length());
+  DynamicHeapArray<u8> encrypted(len);
+  const int res = rc_client_encrypt_login(GetLoginEncryptionKey(username).data(), token.data(), token.length(),
+                                          encrypted.data(), len);
+  if (res != RC_OK)
+  {
+    ERROR_LOG("rc_client_encrypt_login() failed: {}", res);
+    return ret;
+  }
+
+  ret.append_hex(encrypted.data(), encrypted.size());
+  return ret;
+}
+
+TinyString Achievements::DecryptLoginToken(std::string_view encrypted_token, std::string_view username)
+{
+  TinyString ret;
+  if (encrypted_token.empty())
+    return ret;
+
+  const std::optional<std::vector<u8>> ciphertext = StringUtil::DecodeHex(encrypted_token);
+  if (!ciphertext.has_value() || ciphertext->size() >= std::numeric_limits<u32>::max())
+    return ret;
+
+  size_t token_length = ciphertext->size();
+  ret.reserve(static_cast<u32>(token_length));
+
+  const int res = rc_client_decrypt_login(GetLoginEncryptionKey(username).data(), ciphertext->data(),
+                                          ciphertext->size(), ret.data(), &token_length);
+  if (res != RC_OK)
+  {
+    ERROR_LOG("rc_client_decrypt_login() failed: {}", res);
+    return ret;
+  }
+
+  ret.set_size(static_cast<u32>(token_length));
+  return ret;
+}
+
 bool Achievements::IsActive()
 {
 #ifdef ENABLE_RAINTEGRATION
@@ -566,8 +632,18 @@ bool Achievements::Initialize()
   if (!username.empty() && !api_token.empty())
   {
     INFO_LOG("Attempting login with user '{}'...", username);
-    s_login_request = rc_client_begin_login_with_token(s_client, username.c_str(), api_token.c_str(),
-                                                       ClientLoginWithTokenCallback, nullptr);
+
+    // If we can't decrypt the token, it was an old config and we need to re-login.
+    if (const TinyString decrypted_api_token = DecryptLoginToken(api_token, username); !decrypted_api_token.empty())
+    {
+      s_login_request = rc_client_begin_login_with_token(s_client, username.c_str(), decrypted_api_token.c_str(),
+                                                         ClientLoginWithTokenCallback, nullptr);
+    }
+    else
+    {
+      WARNING_LOG("Invalid encrypted login token, requesitng a new one.");
+      Host::OnAchievementsLoginRequested(LoginRequestReason::TokenInvalid);
+    }
   }
 
   // Hardcore mode isn't enabled when achievements first starts, if a game is already running.
@@ -1878,7 +1954,7 @@ void Achievements::ClientLoginWithPasswordCallback(int result, const char* error
 
   // Store configuration.
   Host::SetBaseStringSettingValue("Cheevos", "Username", params->username);
-  Host::SetBaseStringSettingValue("Cheevos", "Token", user->token);
+  Host::SetBaseStringSettingValue("Cheevos", "Token", EncryptLoginToken(user->token, params->username));
   Host::SetBaseStringSettingValue("Cheevos", "LoginTimestamp", fmt::format("{}", std::time(nullptr)).c_str());
   Host::CommitBaseSettingChanges();
 

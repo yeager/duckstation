@@ -217,6 +217,47 @@ typedef struct rc_client_user_game_summary_t {
  */
 RC_EXPORT void RC_CCONV rc_client_get_user_game_summary(const rc_client_t* client, rc_client_user_game_summary_t* summary);
 
+/**
+ * Simple encryption that can be used to protect API tokens in configuration. We do not provide
+ * any cryptographic guarantees other than a significantly increased difficulty of getting the
+ * API token if a user shares their configuration file.
+ */
+
+#define RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH 32 /* 128-bit key, 128-bit IV */
+
+/**
+ * Computes the AES key to use for encryption API tokens.
+ * This key is based on a UUID that is unique to the computer that it is running on, with an
+ * optional salt. One possible option for a salt is the username.
+ */
+RC_EXPORT int RC_CCONV rc_client_get_login_encryption_key(uint8_t key[RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH],
+                                                          const void* salt, size_t salt_length);
+
+/**
+ * Returns the length of a given API token after it has been encrypted. AES operates in blocks
+ * of 128 bits/16 bytes, therefore the encrypted token must be a multiple of 16 bytes in size.
+ */
+RC_EXPORT size_t RC_CCONV rc_client_get_encrypted_login_length(size_t plaintext_length);
+
+/**
+ * Encrypts an API token, protecting it against accidental exposure by sharing configurations.
+ * The token is encrypted using AES-128. You should convert the returned ciphertext to hex before
+ * storing it in a configuration file, as it will contain non-printable characters. ciphertext
+ * should be sized according to rc_client_get_encrypted_login_length().
+ */
+RC_EXPORT int RC_CCONV rc_client_encrypt_login(const uint8_t key[RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH],
+                                               const char* plaintext, size_t plaintext_length, uint8_t* ciphertext,
+                                               size_t ciphertext_length);
+
+/**
+ * Decrypts a previously-encrypted API token.
+ * plaintext should be at least ciphertext_length in size. If the token is not a multiple of 16
+ * bytes in size, the actual size of the token will be returned in plaintext_length.
+ */
+RC_EXPORT int RC_CCONV rc_client_decrypt_login(const uint8_t key[RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH],
+                                               const uint8_t* ciphertext, size_t ciphertext_length, char* plaintext,
+                                               size_t* plaintext_length);
+
 /*****************************************************************************\
 | Game                                                                        |
 \*****************************************************************************/

@@ -11,6 +11,10 @@
 
 #include "rcheevos/rc_internal.h"
 
+/* TODO: Is this appropriate? */
+#include "rhash/aes.h"
+#include "rhash/sha256.h"
+
 #include <stdarg.h>
 
 #ifdef _WIN32
@@ -18,6 +22,8 @@
 #include <windows.h>
 #include <profileapi.h>
 #else
+#include <unistd.h>
+#include <sys/stat.h>
 #include <time.h>
 #endif
 
@@ -899,6 +905,168 @@ void rc_client_get_user_game_summary(const rc_client_t* client, rc_client_user_g
   rc_client_subset_get_user_game_summary(client->game->subsets, summary, unlock_bit);
 
   rc_mutex_unlock((rc_mutex_t*)&client->state.mutex); /* remove const cast for mutex access */
+}
+
+static int rc_client_get_machine_uuid_string(const void** uuid, size_t* uuid_length)
+{
+#ifdef _WIN32
+  HKEY hKey;
+  DWORD machine_guid_length;
+  const char* machine_guid;
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    return 0;
+
+  if (RegGetValueA(hKey, NULL, "MachineGuid", RRF_RT_REG_SZ, NULL, NULL, &machine_guid_length) != ERROR_SUCCESS)
+  {
+    RegCloseKey(hKey);
+    return 0;
+  }
+
+  machine_guid = (char*)malloc(machine_guid_length);
+  if (machine_guid == NULL ||
+      RegGetValueA(hKey, NULL, "MachineGuid", RRF_RT_REG_SZ, NULL, machine_guid, &machine_guid_length) !=
+        ERROR_SUCCESS ||
+      machine_guid_length <= 1)
+  {
+    free(machine_guid);
+    RegCloseKey(hKey);
+    return 0;
+  }
+
+  RegCloseKey(hKey);
+  *uuid = machine_guid;
+  *uuid_length = machine_guid_length - 1; /* drop terminating zero */
+  return 1;
+#else
+  long hostid;
+
+#ifdef __linux__
+  /* use /etc/machine-id on Linux */
+  int fd;
+  struct stat sd;
+  char* machine_id;
+
+  fd = open("/etc/machine-id", O_RDONLY);
+  if (fd >= 0)
+  {
+    if (fstat(fd, &sd) == 0 && sd.st_size > 0)
+    {
+      machine_id = (char*)malloc(sd.st_size);
+      if (machine_id != NULL && read(fd, machine_id, sd.st_size) == sd.st_size)
+      {
+        *uuid = machine_id;
+        *uuid_length = sd.st_size;
+        close(fd);
+        return 1;
+      }
+
+      free(machine_id);
+    }
+
+    close(fd);
+  }
+#endif
+
+  // fallback to POSIX gethostid()
+  hostid = gethostid();
+  *uuid = malloc(sizeof(hostid));
+  memcpy((void*)uuid, &hostid, sizeof(hostid));
+  return 1;
+#endif
+}
+
+int rc_client_get_login_encryption_key(uint8_t key[RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH], const void* salt,
+                                       size_t salt_length)
+{
+  /* super basic key stretching */
+  static const int EXTRA_ROUNDS = 100;
+
+  const void* machine_uuid;
+  size_t machine_uuid_length;
+  SHA256_CTX sha256_ctx;
+  int i;
+
+  if (!rc_client_get_machine_uuid_string(&machine_uuid, &machine_uuid_length))
+    return RC_API_FAILURE;
+
+  sha256_init(&sha256_ctx);
+  sha256_update(&sha256_ctx, (const uint8_t*)machine_uuid, machine_uuid_length);
+  if (salt_length > 0)
+    sha256_update(&sha256_ctx, (const uint8_t*)salt, salt_length);
+  sha256_final(&sha256_ctx, key);
+
+  for (int i = 0; i < EXTRA_ROUNDS; i++)
+  {
+    sha256_init(&sha256_ctx);
+    sha256_update(&sha256_ctx, key, RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH);
+    sha256_final(&sha256_ctx, key);
+  }
+
+  free(machine_uuid);
+
+  return RC_OK;
+}
+
+size_t rc_client_get_encrypted_login_length(size_t plaintext_length)
+{
+  /* ciphertext should be aligned to block size */
+  return (((plaintext_length + (AES_BLOCKLEN - 1)) / AES_BLOCKLEN) * AES_BLOCKLEN);
+}
+
+int rc_client_encrypt_login(const uint8_t key[RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH], const char* plaintext,
+                            size_t plaintext_length, uint8_t* ciphertext, size_t ciphertext_length)
+{
+  struct AES_ctx aes_ctx;
+  size_t padding_size;
+  size_t i;
+
+  /* ciphertext should be aligned to block size */
+  if (ciphertext_length < (((plaintext_length + (AES_BLOCKLEN - 1)) / AES_BLOCKLEN) * AES_BLOCKLEN) ||
+      (ciphertext_length % AES_BLOCKLEN) != 0)
+  {
+    return RC_INSUFFICIENT_BUFFER;
+  }
+
+  memcpy(ciphertext, plaintext, plaintext_length);
+  padding_size = ciphertext_length - plaintext_length;
+  if (padding_size > 0)
+    memset(&ciphertext[plaintext_length], 0, padding_size);
+
+  AES_init_ctx(&aes_ctx, key);
+  AES_ctx_set_iv(&aes_ctx, key + 16); /* second part of 256-bit key is the IV */
+  AES_CBC_encrypt_buffer(&aes_ctx, ciphertext, ciphertext_length);
+  return RC_OK;
+}
+
+int rc_client_decrypt_login(const uint8_t key[RC_CLIENT_LOGIN_ENCRYPTION_KEY_LENGTH], const uint8_t* ciphertext,
+                            size_t ciphertext_length, char* plaintext, size_t* plaintext_length)
+{
+  struct AES_ctx aes_ctx;
+  size_t len;
+
+  /* ciphertext should be aligned to block size */
+  if ((ciphertext_length % AES_BLOCKLEN) != 0)
+    return RC_INSUFFICIENT_BUFFER;
+
+  /* decrypt_buffer is an inout parameter, need to copy */
+  memcpy(plaintext, ciphertext, ciphertext_length);
+
+  AES_init_ctx(&aes_ctx, key);
+  AES_ctx_set_iv(&aes_ctx, key + 16); /* second part of 256-bit key is the IV */
+  AES_CBC_decrypt_buffer(&aes_ctx, plaintext, ciphertext_length);
+
+  /* may not be null terminated, and C89 has no safe strlen... */
+  len = 0;
+  while (len < ciphertext_length)
+  {
+    if (plaintext[len] == '\0')
+      break;
+    len++;
+  }
+
+  *plaintext_length = len;
+  return RC_OK;
 }
 
 /* ===== Game ===== */
