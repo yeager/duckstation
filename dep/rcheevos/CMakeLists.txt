@@ -39,8 +39,12 @@ add_library(rcheevos
   src/rc_compat.h
   src/rc_util.c
   src/rc_version.h
+  src/rhash/aes.c
+  src/rhash/aes.h
   src/rhash/md5.c
   src/rhash/md5.h
+  src/rhash/sha256.c
+  src/rhash/sha256.h
   src/rurl/url.c
 )
 

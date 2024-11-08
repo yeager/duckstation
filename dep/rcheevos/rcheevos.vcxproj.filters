@@ -81,6 +81,12 @@
     <ClCompile Include="src\rc_compat.c" />
     <ClCompile Include="src\rc_util.c" />
     <ClCompile Include="src\rc_client.c" />
+    <ClCompile Include="src\rhash\aes.c">
+      <Filter>rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rhash\sha256.c">
+      <Filter>rhash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\rc_consoles.h">
@@ -136,6 +142,12 @@
     <ClInclude Include="src\rc_client_internal.h" />
     <ClInclude Include="include\rc_util.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rhash\aes.h">
+      <Filter>rhash</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rhash\sha256.h">
+      <Filter>rhash</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
