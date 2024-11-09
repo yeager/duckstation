@@ -301,6 +301,9 @@
     <QtTs Include="translations\duckstation-qt_ru.ts">
       <FileType>Document</FileType>
     </QtTs>
+    <QtTs Include="translations\duckstation-qt_sv.ts">
+      <FileType>Document</FileType>
+    </QtTs>
     <QtTs Include="translations\duckstation-qt_zh-CN.ts">
       <FileType>Document</FileType>
     </QtTs>
