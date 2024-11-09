@@ -11,6 +11,7 @@ set LUPDATE=..\..\dep\msvc\qt\6.1.0\msvc2019_64\bin\lupdate.exe ./ ../core/ ../f
 %LUPDATE% -ts translations\duckstation-qt_pt-br.ts
 %LUPDATE% -ts translations\duckstation-qt_pt-pt.ts
 %LUPDATE% -ts translations\duckstation-qt_ru.ts
+%LUPDATE% -ts translations\duckstation-qt_sv.ts
 %LUPDATE% -ts translations\duckstation-qt_tr.ts
 %LUPDATE% -ts translations\duckstation-qt_zh-cn.ts
 pause
