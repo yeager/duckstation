@@ -1206,22 +1206,22 @@ Olästa meddelanden: {}</translation>
     <message>
         <location filename="../../core/analog_controller.cpp" line="864"/>
         <source>Force Analog Mode on Reset</source>
-        <translation type="unfinished"></translation>
+        <translation>Tvinga analogt läge vid omstart</translation>
     </message>
     <message>
         <location filename="../../core/analog_controller.cpp" line="865"/>
         <source>Forces the controller to analog mode when the console is reset/powered on.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tvingar handkontrollern till analogt läge när konsolen startas om/upp.</translation>
     </message>
     <message>
         <location filename="../../core/analog_controller.cpp" line="868"/>
         <source>Use Analog Sticks for D-Pad in Digital Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Använd analoga spakar för D-Pad i digitalt läge</translation>
     </message>
     <message>
         <location filename="../../core/analog_controller.cpp" line="869"/>
         <source>Allows you to use the analog sticks to control the d-pad in digital mode, as well as the buttons.</source>
-        <translation type="unfinished"></translation>
+        <translation>Låter dig använda analoga spakar för att kontrollera D-Pad i digitalt läge såväl som för knapparna.</translation>
     </message>
     <message>
         <location filename="../../core/analog_controller.cpp" line="872"/>
@@ -2418,7 +2418,7 @@ Olästa meddelanden: {}</translation>
     <message>
         <location filename="../consolesettingswidget.cpp" line="37"/>
         <source>%1 sectors (%2 KB / %3 ms)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 sektorer (%2 KB / %3 ms)</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="71"/>
@@ -2428,7 +2428,7 @@ Olästa meddelanden: {}</translation>
     <message>
         <location filename="../consolesettingswidget.cpp" line="71"/>
         <source>Auto-Detect</source>
-        <translation type="unfinished">Identifiera automatiskt</translation>
+        <translation>Identifiera automatiskt</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="72"/>
@@ -2438,12 +2438,12 @@ Olästa meddelanden: {}</translation>
     <message>
         <location filename="../consolesettingswidget.cpp" line="73"/>
         <source>Execution Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Körningsläge</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="73"/>
         <source>Recompiler (Fastest)</source>
-        <translation type="unfinished">Omkompilerare (snabbaste)</translation>
+        <translation>Omkompilerare (snabbaste)</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="74"/>
@@ -2459,7 +2459,7 @@ Olästa meddelanden: {}</translation>
         <location filename="../consolesettingswidget.cpp" line="110"/>
         <location filename="../consolesettingswidget.cpp" line="114"/>
         <source>Unchecked</source>
-        <translation type="unfinished"></translation>
+        <translation>Inte markerat</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="77"/>
@@ -2531,7 +2531,7 @@ Olästa meddelanden: {}</translation>
     <message>
         <location filename="../consolesettingswidget.cpp" line="102"/>
         <source>8 Sectors</source>
-        <translation type="unfinished"></translation>
+        <translation>8 sektorer</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="103"/>
@@ -2560,17 +2560,17 @@ This warning will only be shown once.</source>
     <message>
         <location filename="../consolesettingswidget.cpp" line="157"/>
         <source>CPU Overclocking Warning</source>
-        <translation type="unfinished"></translation>
+        <translation>Varning för CPU-överklockning</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="160"/>
         <source>Yes, I will confirm bugs without overclocking before reporting.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ja, jag kommer att bekräfta buggar utan överklockning innan de rapporteras.</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="161"/>
         <source>No, take me back to safety.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nej, ta mig tillbaka till säkerhet.</translation>
     </message>
     <message>
         <location filename="../consolesettingswidget.cpp" line="203"/>
@@ -3807,12 +3807,12 @@ This warning will only be shown once.</source>
     <message>
         <location filename="../controllersettingswindow.cpp" line="174"/>
         <source>Do you want to copy all bindings from the currently-selected profile to the new profile? Selecting No will create a completely empty profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vill du kopiera alla bindningar från den markerade profilen till den nya profilen? Väljer du Nej så skapas en helt tom profil.</translation>
     </message>
     <message>
         <location filename="../controllersettingswindow.cpp" line="188"/>
         <source>Do you want to copy the current hotkey bindings from global settings to the new input profile?</source>
-        <translation type="unfinished"></translation>
+        <translation>Vill du kopiera aktuella snabbtangentsbindningar från globala inställningar till den nya inmatningsprofilen?</translation>
     </message>
     <message>
         <location filename="../controllersettingswindow.cpp" line="224"/>
@@ -5168,7 +5168,7 @@ Vill du %1 ändå?</translation>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8030"/>
         <source>Reset System</source>
-        <translation>Nollställ systemet</translation>
+        <translation>Starta om systemet</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7898"/>
@@ -5353,7 +5353,7 @@ Vill du %1 ändå?</translation>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8038"/>
         <source>Return to desktop mode, or exit the application.</source>
-        <translation type="unfinished">Återgå till skrivbordsläge eller avsluta programmet.</translation>
+        <translation>Återgå till skrivbordsläge eller avsluta programmet.</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7661"/>
@@ -6097,7 +6097,7 @@ Vill du läsa in detta tillstånd och fortsätta?</translation>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7630"/>
         <source>All Time: {}</source>
-        <translation type="unfinished"></translation>
+        <translation>All tid: {}</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7631"/>
@@ -6321,12 +6321,12 @@ Vill du läsa in detta tillstånd och fortsätta?</translation>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7686"/>
         <source>Clears all settings set for this game.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tömmer alla inställningar angivna för detta spel.</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7690"/>
         <source>Compatibility Rating</source>
-        <translation type="unfinished"></translation>
+        <translation>Kompatibilitetsbetyg</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7692"/>
@@ -6351,7 +6351,7 @@ Vill du läsa in detta tillstånd och fortsätta?</translation>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7697"/>
         <source>Controller Port {}</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontrollerport {}</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7698"/>
@@ -6901,7 +6901,7 @@ Vill du läsa in detta tillstånd och fortsätta?</translation>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7820"/>
         <source>Exits Big Picture mode, returning to the desktop interface.</source>
-        <translation type="unfinished"></translation>
+        <translation>Avslutar Storbildsläget och återgår till skrivbordsgränssnittet.</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7821"/>
@@ -7377,7 +7377,7 @@ Error was:</source>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7932"/>
         <source>Memory Card Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Inställningar för minneskort</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="7933"/>
@@ -7797,7 +7797,7 @@ Error was:</source>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8019"/>
         <source>Remove From Chain</source>
-        <translation type="unfinished"></translation>
+        <translation>Ta bort från kedja</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8021"/>
@@ -8272,7 +8272,7 @@ Error was:</source>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8145"/>
         <source>Spectator Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Åskådarläge</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8147"/>
@@ -8432,7 +8432,7 @@ Error was:</source>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8189"/>
         <source>Trigger</source>
-        <translation type="unfinished">Trigger</translation>
+        <translation>Utlösare</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8190"/>
@@ -8452,12 +8452,12 @@ Error was:</source>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8194"/>
         <source>Uncompressed Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Okomprimerad storlek</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8195"/>
         <source>Uncompressed Size: %.2f MB</source>
-        <translation type="unfinished"></translation>
+        <translation>Okomprimerad storlek: %.2f MB</translation>
     </message>
     <message>
         <location filename="../../core/fullscreen_ui.cpp" line="8196"/>
@@ -9230,7 +9230,7 @@ Alla databasfusk kommer fortfarande att läsas in och synas såvida inte du avma
         <location filename="../../core/game_database.cpp" line="119"/>
         <source>Disable Upscaling</source>
         <comment>GameDatabase::Trait</comment>
-        <translation type="unfinished"></translation>
+        <translation>Inaktivera uppskalning</translation>
     </message>
     <message>
         <location filename="../../core/game_database.cpp" line="120"/>
@@ -10280,7 +10280,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../graphicssettingswidget.ui" line="308"/>
         <source>Display Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Skärmalternativ</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.ui" line="314"/>
@@ -10290,7 +10290,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../graphicssettingswidget.ui" line="331"/>
         <source>Screen Position:</source>
-        <translation type="unfinished"></translation>
+        <translation>Skärmposition:</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.ui" line="354"/>
@@ -10429,7 +10429,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
         <location filename="../graphicssettingswidget.ui" line="697"/>
         <location filename="../graphicssettingswidget.cpp" line="524"/>
         <source>Show Controller Input</source>
-        <translation type="unfinished"></translation>
+        <translation>Visa kontrollerinmatning</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.ui" line="718"/>
@@ -10592,7 +10592,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
         <location filename="../graphicssettingswidget.ui" line="1379"/>
         <location filename="../graphicssettingswidget.cpp" line="629"/>
         <source>Disable Memory Import</source>
-        <translation type="unfinished"></translation>
+        <translation>Inaktivera minnesimport</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.ui" line="1386"/>
@@ -10630,7 +10630,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../graphicssettingswidget.ui" line="782"/>
         <source>Screenshot Size:</source>
-        <translation type="unfinished"></translation>
+        <translation>Skärmbildsstorlek:</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.cpp" line="534"/>
@@ -10822,7 +10822,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
         <location filename="../graphicssettingswidget.ui" line="1344"/>
         <location filename="../graphicssettingswidget.cpp" line="611"/>
         <source>Use Debug Device</source>
-        <translation type="unfinished"></translation>
+        <translation>Använd felsökningsenhet</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.ui" line="1358"/>
@@ -11122,7 +11122,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../graphicssettingswidget.cpp" line="266"/>
         <source>Select Textures Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Välj texturkatalog</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.cpp" line="327"/>
@@ -11584,7 +11584,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../graphicssettingswidget.cpp" line="882"/>
         <source>Automatic (Based on Window Size)</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisk (baserad på fönsterstorlek)</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.cpp" line="883"/>
@@ -11656,7 +11656,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../graphicssettingswidget.cpp" line="1262"/>
         <source>Configuration Files (config.yaml)</source>
-        <translation type="unfinished"></translation>
+        <translation>Konfigurationsfiler (config.yaml)</translation>
     </message>
     <message>
         <location filename="../graphicssettingswidget.cpp" line="1270"/>
@@ -11902,7 +11902,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../../core/hotkeys.cpp" line="301"/>
         <source>Rewind</source>
-        <translation type="unfinished"></translation>
+        <translation>Spola tillbaka</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="308"/>
@@ -11952,7 +11952,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../../core/hotkeys.cpp" line="431"/>
         <source>Toggle Internal Post-Processing</source>
-        <translation type="unfinished"></translation>
+        <translation>Växla intern efterbehandling</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="437"/>
@@ -11987,12 +11987,12 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../../core/hotkeys.cpp" line="510"/>
         <source>Rotate Display Clockwise</source>
-        <translation type="unfinished"></translation>
+        <translation>Rotera skärmen medurs</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="519"/>
         <source>Rotate Display Counterclockwise</source>
-        <translation type="unfinished"></translation>
+        <translation>Rotera skärmen moturs</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="530"/>
@@ -12032,7 +12032,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
         <location filename="../../core/hotkeys.cpp" line="628"/>
         <location filename="../../core/hotkeys.cpp" line="634"/>
         <source>Save States</source>
-        <translation type="unfinished"></translation>
+        <translation>Sparade tillstånd</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="593"/>
@@ -12047,17 +12047,17 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../../core/hotkeys.cpp" line="603"/>
         <source>Select Previous Save Slot</source>
-        <translation type="unfinished"></translation>
+        <translation>Välj föregående sparningsplats</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="608"/>
         <source>Select Next Save Slot</source>
-        <translation type="unfinished"></translation>
+        <translation>Välj nästa sparningsplats</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="613"/>
         <source>Save State and Select Next Slot</source>
-        <translation type="unfinished"></translation>
+        <translation>Spara tillstånd och välj nästa plats</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="621"/>
@@ -12523,7 +12523,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../interfacesettingswidget.cpp" line="87"/>
         <source>Determines whether a prompt will be displayed to confirm shutting down the emulator/game when the hotkey is pressed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestämmer huruvida en prompt ska visas för att bekräfta avstängning av emulatorn/spelet när snabbtangenten trycks.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="89"/>
@@ -12538,17 +12538,17 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../interfacesettingswidget.cpp" line="101"/>
         <source>Renders the display of the simulated console to the main window of the application, over the game list. If checked, the display will render in a separate window.</source>
-        <translation type="unfinished"></translation>
+        <translation>Renderar skärmen för den simulerade konsolen till huvudfönstret för programmet, över spellistan. Om markerat kommer skärmen att renderas i ett separat fönster.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="113"/>
         <source>Backs up any previous save state when creating a new save state, with a .bak extension.</source>
-        <translation type="unfinished"></translation>
+        <translation>Säkerhetskopierar alla föregående sparade tillstånd när ett nytt sparat tillstånd skapas, med filändelsen .bak.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="118"/>
         <source>Automatically checks for updates to the program on startup. Updates can be deferred until later or skipped entirely.</source>
-        <translation type="unfinished"></translation>
+        <translation>Letar automatiskt efter uppdateringar till programmet vid uppstart. Uppdateringar kan fördröjas till senare eller hoppas över helt.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="121"/>
@@ -12563,12 +12563,12 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../interfacesettingswidget.cpp" line="98"/>
         <source>Prevents the screen saver from activating and the host from sleeping while emulation is running.</source>
-        <translation type="unfinished"></translation>
+        <translation>Förhindrar att skärmsläckaren aktiveras och värddatorn från att sova när emulatorn körs.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="110"/>
         <source>Pauses the emulator when a controller with bindings is disconnected.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pausar emulatorn när en handkontroller med bindningar kopplas från.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="92"/>
@@ -12587,7 +12587,7 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../interfacesettingswidget.cpp" line="106"/>
         <source>Pauses the emulator when you minimize the window or switch to another application, and unpauses when you switch back.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pausar emulatorn när du minimerar fönstret eller byter till ett annat program samt avpausar när du byter tillbaka.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="93"/>
@@ -12597,12 +12597,12 @@ Söka igenom den rekursivt tar längre tid men identifierar filer i underkatalog
     <message>
         <location filename="../interfacesettingswidget.cpp" line="95"/>
         <source>Hides the mouse pointer/cursor when the emulator is in fullscreen mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Döljer muspekaren/markören när emulatorn är i helskärmsläge.</translation>
     </message>
     <message>
         <location filename="../interfacesettingswidget.cpp" line="115"/>
         <source>Shows the game you are currently playing as part of your profile in Discord.</source>
-        <translation type="unfinished"></translation>
+        <translation>Visar spelet som du för närvarande spelar som en del av din profil i Discord.</translation>
     </message>
 </context>
 <context>
@@ -14791,12 +14791,12 @@ Du måste ta bort minneskortet manuellt om du vill spara.</translation>
     <message>
         <location filename="../../core/negcon.cpp" line="281"/>
         <source>I Button</source>
-        <translation type="unfinished"></translation>
+        <translation>I-knapp</translation>
     </message>
     <message>
         <location filename="../../core/negcon.cpp" line="282"/>
         <source>II Button</source>
-        <translation type="unfinished"></translation>
+        <translation>II-knapp</translation>
     </message>
     <message>
         <location filename="../../core/negcon.cpp" line="283"/>
@@ -15138,7 +15138,7 @@ Du måste ta bort minneskortet manuellt om du vill spara.</translation>
         <location filename="../../core/hotkeys.cpp" line="359"/>
         <location filename="../../core/hotkeys.cpp" line="373"/>
         <source>Emulation speed set to {}%.</source>
-        <translation type="unfinished"></translation>
+        <translation>Emuleringshastighet inställd till {}%.</translation>
     </message>
     <message>
         <location filename="../../core/hotkeys.cpp" line="395"/>
@@ -15287,7 +15287,7 @@ Using existing image &apos;{}&apos;, this may result in instability.</source>
     <message>
         <location filename="../../core/system.cpp" line="5389"/>
         <source>Switching to {} renderer...</source>
-        <translation type="unfinished"></translation>
+        <translation>Växlar till {}-renderare...</translation>
     </message>
     <message>
         <location filename="../../core/analog_controller.cpp" line="70"/>
@@ -16083,7 +16083,7 @@ Vill du skapa denna katalog?</translation>
         <location filename="../../core/settings.cpp" line="1216"/>
         <source>Interpreter (Slowest)</source>
         <comment>CPUExecutionMode</comment>
-        <translation type="unfinished"></translation>
+        <translation>Interpreter (långsammast)</translation>
     </message>
     <message>
         <location filename="../../core/settings.cpp" line="1217"/>
@@ -16641,7 +16641,7 @@ Vill du skapa denna katalog?</translation>
         <location filename="../../util/audio_stream.cpp" line="253"/>
         <source>Off (Noisy)</source>
         <comment>AudioStretchMode</comment>
-        <translation type="unfinished"></translation>
+        <translation>Av (Noisy)</translation>
     </message>
     <message>
         <location filename="../../util/audio_stream.cpp" line="254"/>
@@ -17734,7 +17734,7 @@ This may be due to your GPU not supporting the chosen renderer ({1}), or because
         <location filename="../texturereplacementsettingsdialog.ui" line="254"/>
         <location filename="../texturereplacementsettingsdialog.ui" line="324"/>
         <source>Set Alpha Channel</source>
-        <translation type="unfinished"></translation>
+        <translation>Ställ in alfakanal</translation>
     </message>
     <message>
         <location filename="../texturereplacementsettingsdialog.ui" line="263"/>
