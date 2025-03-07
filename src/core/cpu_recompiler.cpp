@@ -1314,7 +1314,7 @@ void CPU::Recompiler::Recompiler::CompileInstruction()
       }
       break;
 
-    case InstructionOp::lwc2: CompileLoadStoreTemplate(&Recompiler::Compile_lwc2, MemoryAccessSize::Word, false, false, TF_READS_S | TF_LOAD_DELAY); break;
+    case InstructionOp::lwc2: CompileLoadStoreTemplate(&Recompiler::Compile_lwc2, MemoryAccessSize::Word, false, false, TF_READS_S); break;
     case InstructionOp::swc2: CompileLoadStoreTemplate(&Recompiler::Compile_swc2, MemoryAccessSize::Word, true, false, TF_GTE_STALL | TF_READS_S); SpecExec_swc2(); break;
 
       // swc0/lwc0/cop1/cop3 are essentially no-ops
@@ -1702,6 +1702,12 @@ void CPU::Recompiler::Recompiler::CompileLoadStoreTemplate(
       }
     }
   }
+
+  // when not using fastmem, flush GTE completion cycle
+  // otherwise we end up consuming more cycles, because we're only counting a single cycle for loads
+  // and ram loads would have normally used up all the cycles the GTE was busy for
+  if (!use_fastmem && !store)
+    Flush(FLUSH_GTE_DONE_CYCLE);
 
   (this->*func)(cf, size, sign, use_fastmem, addr);
 

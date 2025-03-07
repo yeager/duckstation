@@ -4,6 +4,7 @@
 #include "settings.h"
 #include "achievements.h"
 #include "controller.h"
+#include "gte_types.h"
 #include "host.h"
 #include "imgui_overlays.h"
 #include "system.h"
@@ -90,7 +91,20 @@ float SettingInfo::FloatStepValue() const
   return step_value ? StringUtil::FromChars<float>(step_value).value_or(fallback_value) : fallback_value;
 }
 
-GPUSettings::GPUSettings() = default;
+GPUSettings::GPUSettings()
+{
+  SetPGXPDepthClearThreshold(DEFAULT_GPU_PGXP_DEPTH_THRESHOLD);
+}
+
+float GPUSettings::GetPGXPDepthClearThreshold() const
+{
+  return gpu_pgxp_depth_clear_threshold * static_cast<float>(GTE::MAX_Z);
+}
+
+void GPUSettings::SetPGXPDepthClearThreshold(float value)
+{
+  gpu_pgxp_depth_clear_threshold = value / static_cast<float>(GTE::MAX_Z);
+}
 
 #ifdef DYNAMIC_HOST_PAGE_SIZE
 // See note in settings.h - 16K ends up faster with LUT because of nearby code/data.
@@ -258,7 +272,7 @@ void Settings::Load(const SettingsInterface& si, const SettingsInterface& contro
   gpu_pgxp_depth_buffer = si.GetBoolValue("GPU", "PGXPDepthBuffer", false);
   gpu_pgxp_disable_2d = si.GetBoolValue("GPU", "PGXPDisableOn2DPolygons", false);
   gpu_pgxp_transparent_depth = si.GetBoolValue("GPU", "PGXPTransparentDepthTest", false);
-  SetPGXPDepthClearThreshold(si.GetFloatValue("GPU", "PGXPDepthClearThreshold", DEFAULT_GPU_PGXP_DEPTH_THRESHOLD));
+  SetPGXPDepthClearThreshold(si.GetFloatValue("GPU", "PGXPDepthThreshold", DEFAULT_GPU_PGXP_DEPTH_THRESHOLD));
   gpu_show_vram = si.GetBoolValue("Debug", "ShowVRAM");
   gpu_dump_cpu_to_vram_copies = si.GetBoolValue("Debug", "DumpCPUToVRAMCopies");
   gpu_dump_vram_to_cpu_copies = si.GetBoolValue("Debug", "DumpVRAMToCPUCopies");
@@ -597,7 +611,7 @@ void Settings::Save(SettingsInterface& si, bool ignore_base) const
   si.SetBoolValue("GPU", "PGXPDepthBuffer", gpu_pgxp_depth_buffer);
   si.SetBoolValue("GPU", "PGXPDisableOn2DPolygons", gpu_pgxp_disable_2d);
   si.SetBoolValue("GPU", "PGXPTransparentDepthTest", gpu_pgxp_transparent_depth);
-  si.SetFloatValue("GPU", "PGXPDepthClearThreshold", GetPGXPDepthClearThreshold());
+  si.SetFloatValue("GPU", "PGXPDepthThreshold", GetPGXPDepthClearThreshold());
   si.SetBoolValue("Debug", "ShowVRAM", gpu_show_vram);
   si.SetBoolValue("Debug", "DumpCPUToVRAMCopies", gpu_dump_cpu_to_vram_copies);
   si.SetBoolValue("Debug", "DumpVRAMToCPUCopies", gpu_dump_vram_to_cpu_copies);
