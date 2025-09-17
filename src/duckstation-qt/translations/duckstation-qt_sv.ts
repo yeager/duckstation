@@ -12980,7 +12980,7 @@ Detta går inte att ångra.</translation>
         <translation>Återställer sessionens tillstånd från den valda platsen.</translation>
     </message>
     <message>
-        <source>Saves the session state from the selected slot.</source>
+        <source>Saves the session state to the selected slot.</source>
         <translation>Sparar sessionens tillstånd till den valda platsen.</translation>
     </message>
     <message>
